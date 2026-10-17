@@ -1,0 +1,184 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grid Axes</title>
+  <style>
+    :root {
+      --frame-bg: #ffffff;
+      --grid-line: rgba(0, 0, 0, 0.16);
+      --axis: rgba(0, 0, 0, 0.95);
+      --label: rgba(0, 0, 0, 0.9);
+      --grid-step: 20px;
+      --axis-stroke: 1.6px;
+
+      /* Reserve space for labels so nothing is clipped */
+      --pad-top: 10px;
+      --pad-right: 16px;
+      --pad-bottom: 24px;
+      --pad-left: 32px;
+
+      --font: "Manrope", "Atkinson Hyperlegible", sans-serif;
+      --label-size: clamp(10px, 0.95vw, 14px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--frame-bg);
+      overflow: hidden;
+      font-family: var(--font);
+    }
+
+    .frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--frame-bg);
+    }
+
+    .canvas {
+      position: absolute;
+      inset: 0;
+      padding: var(--pad-top) var(--pad-right) var(--pad-bottom) var(--pad-left);
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .plot {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      background-image:
+        repeating-linear-gradient(
+          to right,
+          var(--grid-line) 0,
+          var(--grid-line) 1px,
+          transparent 1px,
+          transparent var(--grid-step)
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          var(--grid-line) 0,
+          var(--grid-line) 1px,
+          transparent 1px,
+          transparent var(--grid-step)
+        );
+    }
+
+    .axis-y,
+    .axis-x {
+      position: absolute;
+      background: var(--axis);
+    }
+
+    .axis-y {
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--axis-stroke);
+    }
+
+    .axis-x {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--axis-stroke);
+    }
+
+    .arrow-up,
+    .arrow-right {
+      position: absolute;
+      width: 0;
+      height: 0;
+      display: block;
+    }
+
+    /* Real arrowheads (not X) */
+    .arrow-up {
+      left: calc(var(--axis-stroke) / 2 - 4px);
+      top: -7px;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 7px solid var(--axis);
+    }
+
+    .arrow-right {
+      right: -7px;
+      bottom: calc(var(--axis-stroke) / 2 - 4px);
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 7px solid var(--axis);
+    }
+
+    .label {
+      position: absolute;
+      margin: 0;
+      color: var(--label);
+      font-size: var(--label-size);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .label-vertical {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .label-people {
+      left: 4px;
+      top: 2px;
+    }
+
+    .label-technology {
+      left: 4px;
+      bottom: 14px;
+    }
+
+    .label-insular {
+      left: 34px;
+      bottom: 4px;
+    }
+
+    .label-systemic {
+      right: 2px;
+      bottom: 4px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <main class="frame" data-node-id="3008:820">
+    <div class="canvas" data-node-id="3008:787">
+      <section class="plot" aria-label="Grid and axis chart">
+        <div class="axis-y" data-node-id="2997:3794" aria-hidden="true">
+          <span class="arrow-up" aria-hidden="true"></span>
+        </div>
+
+        <div class="axis-x" data-node-id="2997:3795" aria-hidden="true">
+          <span class="arrow-right" aria-hidden="true"></span>
+        </div>
+      </section>
+
+      <p class="label label-vertical label-people" data-node-id="2997:3798">People</p>
+      <p class="label label-vertical label-technology" data-node-id="2997:3796">Technology</p>
+      <p class="label label-insular" data-node-id="2997:3797">Insular</p>
+      <p class="label label-systemic" data-node-id="2997:3914">Systemic</p>
+    </div>
+  </main>
+</body>
+</html>

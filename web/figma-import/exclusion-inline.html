@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-site-mode="figma3042" data-landing-surface-state="exclusion">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exclusion - Figma Import</title>
+  <link rel="stylesheet" href="../responsive.shared.css?v=20260402-4" />
+  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+  <script>
+    (function () {
+      function readFigmaCaptureConfig() {
+        var hash = window.location.hash || "";
+        var clean = hash.charAt(0) === "#" ? hash.slice(1) : hash;
+        if (!clean) return null;
+        var params = new URLSearchParams(clean);
+        var captureId = params.get("figmacapture");
+        var endpoint = params.get("figmaendpoint");
+        if (!captureId || !endpoint) return null;
+        var selector = params.get("figmaselector") || "body";
+        var delay = Number(params.get("figmadelay") || "0");
+        return {
+          captureId: captureId,
+          endpoint: endpoint,
+          selector: selector,
+          delay: Number.isFinite(delay) ? Math.max(delay, 0) : 0
+        };
+      }
+
+      function maybeRunFigmaCapture() {
+        var config = readFigmaCaptureConfig();
+        document.documentElement.classList.toggle("figma-capture-active", !!config);
+        if (!config) return;
+        if (window.__figmaAutoCaptureLastId === config.captureId) return;
+
+        var attempts = 0;
+        function tryCapture() {
+          attempts += 1;
+          if (window.figma && typeof window.figma.captureForDesign === "function") {
+            window.__figmaAutoCaptureLastId = config.captureId;
+            window.setTimeout(function () {
+              window.figma.captureForDesign({
+                captureId: config.captureId,
+                endpoint: config.endpoint,
+                selector: config.selector
+              });
+            }, config.delay);
+            return;
+          }
+          if (attempts < 240) {
+            window.setTimeout(tryCapture, 250);
+          }
+        }
+
+        tryCapture();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", maybeRunFigmaCapture, { once: true });
+      } else {
+        maybeRunFigmaCapture();
+      }
+      window.addEventListener("hashchange", maybeRunFigmaCapture);
+    })();
+  </script>
+  <style>
+    html[data-site-mode="figma3042"],
+    html[data-site-mode="figma3042"] body {
+      overflow: auto !important;
+      background: #f2f2f2 !important;
+    }
+
+    html[data-site-mode="figma3042"] .home3042 {
+      min-height: 100vh;
+    }
+
+    html[data-site-mode="figma3042"] #homepage---right,
+    html[data-site-mode="figma3042"] .landing3042-bubbles,
+    html[data-site-mode="figma3042"] .landing3042-logo {
+      display: none !important;
+    }
+
+    html[data-site-mode="figma3042"] #homepage---left {
+      width: 100% !important;
+      min-height: 100vh !important;
+    }
+
+    html[data-site-mode="figma3042"].figma-capture-active #homepage---left {
+      display: grid !important;
+    }
+
+    html[data-site-mode="figma3042"] #homepage---left .hero3042-canvas {
+      margin: 0 auto !important;
+    }
+
+    html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-inline {
+      display: block !important;
+      pointer-events: auto !important;
+    }
+
+    html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close {
+      display: flex !important;
+      pointer-events: auto !important;
+    }
+
+    html[data-site-mode="figma3042"] #homepage---left .landing3042-practice-cta {
+      display: block !important;
+      pointer-events: auto !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="home3042" id="site-shell">
+    <section class="hero3042" id="homepage---left" aria-labelledby="hero-left-title">
+      <div class="hero3042-canvas">
+        <div class="landing3042-stage">
+          <header class="landing3042-header">
+            <h1 id="hero-left-title" class="hero3042-title">My Path</h1>
+            <p class="landing3042-title-copy">
+              From an
+              <span class="landing3042-inline-link external-link-hoverfx">Exclusion</span>
+              Triggered by a &#8220;&#183;&#8221;<br />
+              To Designing from/for/with Margins
+            </p>
+          </header>
+
+          <section
+            id="landing3042-exclusion-inline"
+            class="landing3042-exclusion-inline"
+            aria-labelledby="landing3042-exclusion-title"
+            aria-hidden="false"
+          >
+            <article class="landing3042-exclusion-panel">
+              <figure class="landing3042-exclusion-hero-figure">
+                <img
+                  src="../assets/figma-node-2940-664-current.png?v=20260228"
+                  alt="Name card visual showing a Uyghur name rendered with a middle dot."
+                  loading="eager"
+                  decoding="async"
+                />
+              </figure>
+
+              <div class="landing3042-exclusion-copy">
+                <p class="landing3042-exclusion-kicker">
+                  A middle dot should not decide whether someone is recognized.
+                </p>
+                <h2 id="landing3042-exclusion-title" class="landing3042-exclusion-title">
+                  Systems built without affected voices often reproduce exclusion.
+                </h2>
+                <div class="landing3042-exclusion-body">
+                  <p>
+                    As a Uyghur, I regularly encounter systems that reject my name because it includes a middle dot (·).
+                  </p>
+                  <p>
+                    If I keep it, real-name verification fails. If I remove it, my name no longer matches my official documents.
+                  </p>
+                  <p>
+                    What looks like a formatting detail is actually a design decision about who gets recognized and who gets filtered out.
+                  </p>
+                </div>
+                <figure class="landing3042-exclusion-support-figure">
+                  <img
+                    src="../assets/examples.png"
+                    alt="Examples of services rejecting names that use a middle dot."
+                    loading="eager"
+                    decoding="async"
+                  />
+                </figure>
+              </div>
+            </article>
+          </section>
+
+          <button
+            id="landing3042-exclusion-close"
+            class="map-project-inline-close landing3042-exclusion-close"
+            type="button"
+            aria-label="Close Exclusion view"
+            aria-hidden="false"
+          >
+            <img
+              class="map-project-inline-close-icon"
+              src="../assets/Veritas/veritas-detail-close.svg"
+              alt=""
+              loading="eager"
+              decoding="async"
+            />
+          </button>
+
+          <button class="landing3042-practice-cta" type="button" aria-label="Scroll to My Practice section">
+            <img
+              class="landing3042-practice-cta-arrow"
+              src="../assets/Landingpage/BIg_Arrow.svg"
+              alt=""
+              loading="eager"
+              decoding="async"
+              aria-hidden="true"
+            />
+            <span class="landing3042-practice-cta-copy">my practice</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://web.codetab.cc",
+    "ANTHROPIC_AUTH_TOKEN": "sk-9dac62fc56cf0fe625659b899e782c69718d4d14cede7c9bf4d1125fb9924daa",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
+  }
+}
