@@ -3148,6 +3148,9 @@
         if (!(imageIndex > 0)) continue;
         cards.push({
           src: MAP_PROJECT_TEMPLATE_R2_GALLERY_BASE + "/" + String(imageIndex) + ".png",
+          displaySrc: "./assets/portfolio-gallery/" + String(imageIndex) + "-display.webp",
+          viewerSrc: "./assets/portfolio-gallery/" + String(imageIndex) + "-viewer.webp",
+          detailSrc: "./assets/portfolio-gallery/" + String(imageIndex) + "-detail.webp",
           alt: (projectTitle || "Project") + " old portfolio image " + String(i + 1)
         });
       }
@@ -3421,22 +3424,27 @@
         galleryCards: [
           {
             src: "./assets/MCI/M2.png",
+            displaySrc: "./assets/portfolio-gallery/M2-display.webp",
             alt: "PaperMind prototype interaction in a community care setting"
           },
           {
             src: "./assets/MCI/M4.png",
+            displaySrc: "./assets/portfolio-gallery/M4-display.webp",
             alt: "PaperMind wearable and game setup details"
           },
           {
             src: "./assets/MCI/M5.png",
+            displaySrc: "./assets/portfolio-gallery/M5-display.webp",
             alt: "PaperMind training interface and feedback flow"
           },
           {
             src: "./assets/MCI/M1.png",
+            displaySrc: "./assets/portfolio-gallery/M1-display.webp",
             alt: "PaperMind session capture with participant and therapist"
           },
           {
             src: "./assets/MCI/M3.png",
+            displaySrc: "./assets/portfolio-gallery/M3-display.webp",
             alt: "PaperMind in-context co-creation and testing moments"
           }
         ]
@@ -3690,8 +3698,16 @@
       viewportEl: null,
       canvasEl: null,
       imageEl: null,
+      originalLinkEl: null,
       closeBtnEl: null,
       isOpen: false,
+      loadToken: 0,
+      hasFitted: false,
+      transformRaf: 0,
+      viewerSrc: "",
+      detailSrc: "",
+      detailRequested: false,
+      detailFailed: false,
       scale: 1,
       minScale: 1,
       maxScale: 6,
@@ -3701,6 +3717,8 @@
       baseHeight: 1,
       viewportWidth: 0,
       viewportHeight: 0,
+      viewportLeft: 0,
+      viewportTop: 0,
       dragPointerId: -1,
       dragStartX: 0,
       dragStartY: 0,
@@ -6975,13 +6993,17 @@
       var cardsHtml = cards.map(function (card, cardIndex) {
         var src = escapeMapProjectDetailHtml(card && card.src ? String(card.src) : "");
         if (!src) return "";
+        var displaySrc = escapeMapProjectDetailHtml(card && card.displaySrc ? String(card.displaySrc) : src);
+        var viewerSrc = escapeMapProjectDetailHtml(card && card.viewerSrc ? String(card.viewerSrc) : src);
+        var detailSrc = escapeMapProjectDetailHtml(card && card.detailSrc ? String(card.detailSrc) : "");
         var alt = escapeMapProjectDetailHtml(card && card.alt ? String(card.alt) : "");
         var ariaLabel = alt ? ("Open image: " + alt) : "Open project image";
         var cardOrder = cardIndex + 1;
+        var imagePriority = cardIndex === 0 ? ' loading="eager" fetchpriority="high"' : ' loading="lazy" fetchpriority="low"';
         return [
           '<figure class="map-project-template-gallery-card" data-card-index="' + String(cardOrder) + '">',
-          '<button type="button" class="map-project-template-gallery-zoom-trigger" data-viewer-src="' + src + '" data-viewer-alt="' + alt + '" aria-label="' + escapeMapProjectDetailHtml(ariaLabel) + '">',
-          '<img class="map-project-template-gallery-image is-lazy-pending" src="' + MAP_PROJECT_TEMPLATE_IMAGE_PLACEHOLDER_SRC + '" data-src="' + src + '" alt="' + alt + '" loading="lazy" decoding="async" fetchpriority="low" />',
+          '<button type="button" class="map-project-template-gallery-zoom-trigger" data-viewer-src="' + viewerSrc + '" data-detail-src="' + detailSrc + '" data-original-src="' + src + '" data-viewer-alt="' + alt + '" aria-label="' + escapeMapProjectDetailHtml(ariaLabel) + '">',
+          '<img class="map-project-template-gallery-image is-lazy-pending" src="' + MAP_PROJECT_TEMPLATE_IMAGE_PLACEHOLDER_SRC + '" data-src="' + displaySrc + '" alt="' + alt + '" decoding="async"' + imagePriority + ' />',
           "</button>",
           "</figure>"
         ].join("");
@@ -7179,6 +7201,8 @@
       var rect = viewer.viewportEl.getBoundingClientRect();
       viewer.viewportWidth = rect.width;
       viewer.viewportHeight = rect.height;
+      viewer.viewportLeft = rect.left;
+      viewer.viewportTop = rect.top;
     }
 
     function clampMapProjectTemplateImageViewerPan() {
@@ -7195,11 +7219,18 @@
     function applyMapProjectTemplateImageViewerTransform() {
       var viewer = mapProjectTemplateImageViewerState;
       if (!viewer.canvasEl) return;
+      viewer.transformRaf = 0;
       viewer.canvasEl.style.transform =
         "translate(-50%, -50%) translate3d(" + viewer.tx.toFixed(3) + "px, " + viewer.ty.toFixed(3) + "px, 0) scale(" + viewer.scale.toFixed(5) + ")";
       if (viewer.rootEl) {
         viewer.rootEl.classList.toggle("is-zoomed", viewer.scale > (viewer.minScale + 0.001));
       }
+    }
+
+    function scheduleMapProjectTemplateImageViewerTransform() {
+      var viewer = mapProjectTemplateImageViewerState;
+      if (viewer.transformRaf) return;
+      viewer.transformRaf = window.requestAnimationFrame(applyMapProjectTemplateImageViewerTransform);
     }
 
     function fitMapProjectTemplateImageViewerImage(resetTransform) {
@@ -7208,7 +7239,6 @@
       var naturalW = viewer.imageEl.naturalWidth || 0;
       var naturalH = viewer.imageEl.naturalHeight || 0;
       if (!(naturalW > 0) || !(naturalH > 0)) return;
-      syncMapProjectTemplateImageViewerViewportSize();
       if (!(viewer.viewportWidth > 0) || !(viewer.viewportHeight > 0)) return;
 
       var fitScale = Math.min(viewer.viewportWidth / naturalW, viewer.viewportHeight / naturalH);
@@ -7229,18 +7259,48 @@
       applyMapProjectTemplateImageViewerTransform();
     }
 
+    function maybeLoadMapProjectTemplateViewerDetail() {
+      var viewer = mapProjectTemplateImageViewerState;
+      if (!viewer.isOpen || !viewer.detailSrc || viewer.detailRequested || viewer.detailFailed || !viewer.imageEl) return;
+      if (viewer.imageEl.getAttribute("src") !== viewer.viewerSrc || !viewer.imageEl.naturalWidth) return;
+      var pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
+      if (viewer.baseWidth * viewer.scale * pixelRatio <= viewer.imageEl.naturalWidth * 0.9) return;
+
+      viewer.detailRequested = true;
+      var loadToken = viewer.loadToken;
+      var detailedImage = new Image();
+      detailedImage.decoding = "async";
+      detailedImage.fetchPriority = "high";
+      detailedImage.onload = function () {
+        var ready = detailedImage.decode
+          ? detailedImage.decode().catch(function () {})
+          : Promise.resolve();
+        ready.then(function () {
+          if (!viewer.isOpen || viewer.loadToken !== loadToken || !viewer.imageEl) return;
+          var currentPixelRatio = Math.min(window.devicePixelRatio || 1, 3);
+          if (viewer.baseWidth * viewer.scale * currentPixelRatio > viewer.imageEl.naturalWidth * 0.9) {
+            viewer.imageEl.src = viewer.detailSrc;
+          } else {
+            viewer.detailRequested = false;
+          }
+        });
+      };
+      detailedImage.onerror = function () {
+        if (viewer.loadToken === loadToken) viewer.detailFailed = true;
+      };
+      detailedImage.src = viewer.detailSrc;
+    }
+
     function zoomMapProjectTemplateImageViewerTo(clientX, clientY, requestedScale) {
       var viewer = mapProjectTemplateImageViewerState;
       if (!viewer.viewportEl || !viewer.isOpen) return;
-      syncMapProjectTemplateImageViewerViewportSize();
       if (!(viewer.viewportWidth > 0) || !(viewer.viewportHeight > 0)) return;
 
       var nextScale = clampNumber(requestedScale, viewer.minScale, viewer.maxScale);
       if (Math.abs(nextScale - viewer.scale) < 0.0001) return;
 
-      var rect = viewer.viewportEl.getBoundingClientRect();
-      var localX = clientX - rect.left;
-      var localY = clientY - rect.top;
+      var localX = clientX - viewer.viewportLeft;
+      var localY = clientY - viewer.viewportTop;
       var offsetX = localX - (viewer.viewportWidth * 0.5);
       var offsetY = localY - (viewer.viewportHeight * 0.5);
       var worldX = (offsetX - viewer.tx) / viewer.scale;
@@ -7250,7 +7310,8 @@
       viewer.tx = offsetX - (worldX * nextScale);
       viewer.ty = offsetY - (worldY * nextScale);
       clampMapProjectTemplateImageViewerPan();
-      applyMapProjectTemplateImageViewerTransform();
+      scheduleMapProjectTemplateImageViewerTransform();
+      maybeLoadMapProjectTemplateViewerDetail();
     }
 
     function updateMapProjectTemplateImageViewerPinch() {
@@ -7266,10 +7327,8 @@
       var midpointX = (first.x + second.x) * 0.5;
       var midpointY = (first.y + second.y) * 0.5;
 
-      syncMapProjectTemplateImageViewerViewportSize();
-      var rect = viewer.viewportEl.getBoundingClientRect();
-      var offsetX = (midpointX - rect.left) - (viewer.viewportWidth * 0.5);
-      var offsetY = (midpointY - rect.top) - (viewer.viewportHeight * 0.5);
+      var offsetX = (midpointX - viewer.viewportLeft) - (viewer.viewportWidth * 0.5);
+      var offsetY = (midpointY - viewer.viewportTop) - (viewer.viewportHeight * 0.5);
 
       if (!(viewer.pinchInitialDist > 0)) {
         viewer.pinchInitialDist = distance;
@@ -7285,7 +7344,8 @@
       viewer.tx = offsetX - (viewer.pinchWorldX * nextScale);
       viewer.ty = offsetY - (viewer.pinchWorldY * nextScale);
       clampMapProjectTemplateImageViewerPan();
-      applyMapProjectTemplateImageViewerTransform();
+      scheduleMapProjectTemplateImageViewerTransform();
+      maybeLoadMapProjectTemplateViewerDetail();
     }
 
     function handleMapProjectTemplateImageViewerWheel(event) {
@@ -7363,7 +7423,7 @@
       viewer.tx = viewer.dragStartTx + (event.clientX - viewer.dragStartX);
       viewer.ty = viewer.dragStartTy + (event.clientY - viewer.dragStartY);
       clampMapProjectTemplateImageViewerPan();
-      applyMapProjectTemplateImageViewerTransform();
+      scheduleMapProjectTemplateImageViewerTransform();
     }
 
     function handleMapProjectTemplateImageViewerPointerEnd(event) {
@@ -7486,6 +7546,7 @@
       root.setAttribute("aria-label", "Image viewer");
       root.innerHTML = [
         '<div class="map-project-template-image-viewer-backdrop" data-viewer-close="true"></div>',
+        '<a class="map-project-template-image-viewer-original" target="_blank" rel="noopener noreferrer">Open original PNG</a>',
         '<button type="button" class="map-project-template-image-viewer-close" aria-label="Close image viewer">&times;</button>',
         '<div class="map-project-template-image-viewer-viewport" aria-live="polite">',
         '<div class="map-project-template-image-viewer-canvas">',
@@ -7500,6 +7561,7 @@
       viewer.viewportEl = root.querySelector(".map-project-template-image-viewer-viewport");
       viewer.canvasEl = root.querySelector(".map-project-template-image-viewer-canvas");
       viewer.imageEl = root.querySelector(".map-project-template-image-viewer-image");
+      viewer.originalLinkEl = root.querySelector(".map-project-template-image-viewer-original");
       viewer.closeBtnEl = root.querySelector(".map-project-template-image-viewer-close");
 
       if (viewer.backdropEl) {
@@ -7520,7 +7582,10 @@
 
       if (viewer.imageEl) {
         viewer.imageEl.addEventListener("load", function () {
-          fitMapProjectTemplateImageViewerImage(true);
+          if (!viewer.isOpen) return;
+          fitMapProjectTemplateImageViewerImage(!viewer.hasFitted);
+          viewer.hasFitted = true;
+          maybeLoadMapProjectTemplateViewerDetail();
         });
         viewer.imageEl.addEventListener("dragstart", function (event) {
           event.preventDefault();
@@ -7544,7 +7609,9 @@
 
       window.addEventListener("resize", function () {
         if (!viewer.isOpen) return;
+        syncMapProjectTemplateImageViewerViewportSize();
         fitMapProjectTemplateImageViewerImage(false);
+        maybeLoadMapProjectTemplateViewerDetail();
       });
 
       return viewer.rootEl;
@@ -7554,6 +7621,16 @@
       var viewer = mapProjectTemplateImageViewerState;
       if (!viewer.rootEl || !viewer.isOpen) return;
       viewer.isOpen = false;
+      viewer.loadToken += 1;
+      viewer.hasFitted = false;
+      viewer.viewerSrc = "";
+      viewer.detailSrc = "";
+      viewer.detailRequested = false;
+      viewer.detailFailed = false;
+      if (viewer.transformRaf) {
+        window.cancelAnimationFrame(viewer.transformRaf);
+        viewer.transformRaf = 0;
+      }
       clearMapProjectTemplateImageViewerPointers();
       viewer.scale = viewer.minScale;
       viewer.tx = 0;
@@ -7566,16 +7643,24 @@
         viewer.imageEl.removeAttribute("src");
         viewer.imageEl.alt = "";
       }
+      if (viewer.originalLinkEl) viewer.originalLinkEl.removeAttribute("href");
     }
 
-    function openMapProjectTemplateImageViewer(src, alt) {
+    function openMapProjectTemplateImageViewer(src, alt, previewSrc, originalSrc, detailSrc) {
       var imageSrc = String(src || "").trim();
-      if (!imageSrc) return;
+      var initialSrc = String(previewSrc || imageSrc).trim();
+      if (!imageSrc || !initialSrc) return;
       var root = ensureMapProjectTemplateImageViewer();
       if (!root) return;
       var viewer = mapProjectTemplateImageViewerState;
+      var loadToken = ++viewer.loadToken;
       clearMapProjectTemplateImageViewerPointers();
       viewer.isOpen = true;
+      viewer.hasFitted = false;
+      viewer.viewerSrc = imageSrc;
+      viewer.detailSrc = String(detailSrc || "").trim();
+      viewer.detailRequested = false;
+      viewer.detailFailed = false;
       viewer.scale = viewer.minScale;
       viewer.tx = 0;
       viewer.ty = 0;
@@ -7583,16 +7668,36 @@
       root.setAttribute("aria-hidden", "false");
       root.classList.add("is-open");
       document.documentElement.classList.add("map-project-template-image-viewer-open");
-      if (viewer.imageEl) {
-        viewer.imageEl.alt = alt ? String(alt) : "Project image";
-        if (viewer.imageEl.getAttribute("src") !== imageSrc) {
-          viewer.imageEl.src = imageSrc;
-        } else if (viewer.imageEl.complete && viewer.imageEl.naturalWidth > 0) {
-          fitMapProjectTemplateImageViewerImage(true);
-        }
+      if (viewer.originalLinkEl) {
+        viewer.originalLinkEl.href = String(originalSrc || imageSrc);
       }
       syncMapProjectTemplateImageViewerViewportSize();
+      if (viewer.imageEl) {
+        viewer.imageEl.alt = alt ? String(alt) : "Project image";
+        viewer.imageEl.src = initialSrc;
+        if (viewer.imageEl.complete && viewer.imageEl.naturalWidth > 0) {
+          fitMapProjectTemplateImageViewerImage(true);
+          viewer.hasFitted = true;
+        }
+      }
       applyMapProjectTemplateImageViewerTransform();
+
+      if (imageSrc !== initialSrc) {
+        var highResolutionImage = new Image();
+        highResolutionImage.decoding = "async";
+        highResolutionImage.fetchPriority = "high";
+        highResolutionImage.onload = function () {
+          var ready = highResolutionImage.decode
+            ? highResolutionImage.decode().catch(function () {})
+            : Promise.resolve();
+          ready.then(function () {
+            if (viewer.isOpen && viewer.loadToken === loadToken && viewer.imageEl) {
+              viewer.imageEl.src = imageSrc;
+            }
+          });
+        };
+        highResolutionImage.src = imageSrc;
+      }
     }
 
     function bindMapProjectTemplateGalleryZoomTriggers() {
@@ -7608,7 +7713,10 @@
         event.stopPropagation();
         openMapProjectTemplateImageViewer(
           trigger.getAttribute("data-viewer-src") || "",
-          trigger.getAttribute("data-viewer-alt") || ""
+          trigger.getAttribute("data-viewer-alt") || "",
+          trigger.querySelector("img") ? trigger.querySelector("img").getAttribute("data-src") : "",
+          trigger.getAttribute("data-original-src") || "",
+          trigger.getAttribute("data-detail-src") || ""
         );
       });
     }

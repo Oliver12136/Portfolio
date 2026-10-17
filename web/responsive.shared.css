@@ -7906,6 +7906,8 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--te
   height: var(--map-project-template-gallery-card-h);
   overflow: hidden;
   background: #efefef;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 470px;
 }
 
 html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--template-makapakka .map-project-template-gallery-zoom-trigger {
@@ -7957,10 +7959,24 @@ html[data-site-mode="figma3042"] .map-project-template-image-viewer {
 html[data-site-mode="figma3042"] .map-project-template-image-viewer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 8, 8, 0.92);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: #080808;
   touch-action: none;
+}
+
+html[data-site-mode="figma3042"] .map-project-template-image-viewer-original {
+  position: absolute;
+  top: 25px;
+  left: 24px;
+  z-index: 2;
+  color: #ffffff;
+  font: 14px "Atkinson Hyperlegible", sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+html[data-site-mode="figma3042"] .map-project-template-image-viewer-original:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
 }
 
 html[data-site-mode="figma3042"] .map-project-template-image-viewer-close {
@@ -8011,6 +8027,9 @@ html[data-site-mode="figma3042"] .map-project-template-image-viewer-canvas {
   top: 50%;
   transform: translate(-50%, -50%);
   transform-origin: center center;
+}
+
+html[data-site-mode="figma3042"] .map-project-template-image-viewer.is-dragging .map-project-template-image-viewer-canvas {
   will-change: transform;
 }
 
