@@ -12510,7 +12510,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   width: 100%;
   height: 100%;
   max-width: none;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-finding-panel-figure--right img {
