@@ -3527,6 +3527,22 @@
     var PRACTICE_TAG_FILTER_SOCIAL = "social";
     var PRACTICE_TAG_FILTER_INTERACTION = "interaction";
     var PRACTICE_TAG_FILTER_PSSD = "pssd";
+
+    function getInitialPracticeTagFilterKey() {
+      var params = new URLSearchParams(window.location.search || "");
+      var requestedFilter = String(params.get("work") || "")
+        .toLowerCase()
+        .replace(/[\s_]+/g, "-");
+
+      if (requestedFilter === "interaction") return PRACTICE_TAG_FILTER_INTERACTION;
+      if (requestedFilter === "service" || requestedFilter === "service-design" || requestedFilter === "pssd") {
+        return PRACTICE_TAG_FILTER_PSSD;
+      }
+      if (requestedFilter === "social" || requestedFilter === "social-design") {
+        return PRACTICE_TAG_FILTER_SOCIAL;
+      }
+      return "";
+    }
     var PRACTICE_PRIORITY_SCOPE_DEFAULT = "default";
     var PRACTICE_ROW_VISUAL_OFFSET = 0;
     var mapProjectDetailHeaderWrapRaf = 0;
@@ -3713,7 +3729,7 @@
     var practiceTagItemsByKey = {};
     var practiceTagFilterState = {
       hoveredKey: "",
-      lockedKey: ""
+      lockedKey: getInitialPracticeTagFilterKey()
     };
     var practiceGridEntries = [];
     var practiceResponsiveState = {
