@@ -1119,7 +1119,10 @@ html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot--blue .map-pro
 
 /* Keep research copy full-width below 1060px; hide the route and its host. */
 @media (max-width: 1059.98px) {
-  .norrtag-research-intro { grid-template-columns: minmax(0, 1fr); }
+  .norrtag-research-intro {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline-end: 0 !important;
+  }
   .norrtag-research-intro .norrtag-route-host,
   .norrtag-research-intro .norrtag-route { display: none; }
 }
