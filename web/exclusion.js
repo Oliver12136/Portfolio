@@ -183,19 +183,15 @@
       if (!open || event.ctrlKey || event.metaKey || !event.deltaY) return;
       var now = performance.now();
       var boundary = reflection.offsetTop;
-      var freshGesture = now - wheelTime > 180 || wheelDirection >= 0;
       if (event.deltaY > 0) {
         returnGuard = false;
-      } else if (freshGesture && scroll.scrollTop <= boundary + 1) {
-        if (returnGuard) {
-          event.preventDefault();
-          moveTo(0);
-          return;
-        }
+      } else if (scroll.scrollTop <= boundary + 1) {
         event.preventDefault();
-        returnGuard = true;
-      } else if (freshGesture) {
-        returnGuard = true;
+        if (!returnGuard) {
+          returnGuard = true;
+          moveTo(0);
+          returnGuard = true;
+        }
       }
       wheelTime = now;wheelDirection = Math.sign(event.deltaY);
       if (event.deltaY < 0 && returnGuard && scroll.scrollTop <= boundary + 1) {
@@ -213,15 +209,11 @@
       var movement = event.touches[0].clientY - touchStartY;
       if (movement < 0 && !touchStartAtBoundary) returnGuard = true;
       if (movement > 0 && scroll.scrollTop <= reflection.offsetTop + 1) {
-        if (touchStartAtBoundary && returnGuard) {
-          event.preventDefault();
-          moveTo(0);
-          returnGuard = false;
-        } else if (touchStartAtBoundary) {
+        if (!returnGuard) {
           event.preventDefault();
           returnGuard = true;
-        } else {
-          event.preventDefault();
+          moveTo(0);
+          returnGuard = true;
         }
       }
     }, {passive:false});
