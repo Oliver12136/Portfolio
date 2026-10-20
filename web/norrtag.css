@@ -1,0 +1,1118 @@
+/* Figma 5:2259 is the visual source of truth for this project. */
+.norrtag-detail[hidden] {
+  display: none !important;
+}
+.norrtag-detail {
+  --norrtag-blue: #2457a9;
+  --norrtag-yellow: #f4bc41;
+  font-family: var(--typo-latin-family), sans-serif;
+  font-synthesis: none;
+  font-weight: 400;
+  color: #1b1b1b;
+  background: #fff;
+}
+.norrtag-detail * {
+  box-sizing: border-box;
+}
+.norrtag-detail :is(p, h3, h4, h5, figure) {
+  margin: 0;
+}
+.norrtag-detail p {
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 400;
+}
+.norrtag-detail :is(h3, h4, h5) {
+  font-weight: 400 !important;
+  color: inherit !important;
+  letter-spacing: 0 !important;
+}
+.norrtag-detail h3 {
+  font-size: 32px !important;
+  line-height: 48px !important;
+}
+.norrtag-detail h4 {
+  font-size: 20px !important;
+  line-height: 30px !important;
+}
+.norrtag-detail h5 {
+  font-size: 18px !important;
+  line-height: 27px !important;
+}
+.norrtag-inner {
+  width: 100%;
+  padding-inline: 29px 40px;
+  margin-inline: auto;
+}
+.norrtag-opening {
+  padding-top: 40px;
+}
+.norrtag-metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.norrtag-metadata > div:last-child {
+  text-align: right;
+}
+.norrtag-metadata p {
+  font-size: 16px;
+  line-height: 24px;
+  color: #979797;
+}
+.norrtag-metadata p + p {
+  margin-top: 4px;
+}
+.norrtag-hero {
+  display: grid;
+  grid-template-columns: 697fr 488fr;
+  gap: 21px;
+  align-items: end;
+  margin-top: 40px;
+}
+.norrtag-hero-figure {
+  aspect-ratio: 697 / 379;
+  position: relative;
+}
+.norrtag-hero-figure img {
+  position: absolute;
+  height: 100%;
+  width: 87.76%;
+  left: 6.12%;
+  top: 0;
+}
+.norrtag-introduction {
+  max-width: 488px;
+}
+.norrtag-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+.norrtag-three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+.norrtag-blue {
+  color: white;
+  position: relative;
+  isolation: isolate;
+}
+.norrtag-blue::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--norrtag-blue);
+}
+.norrtag-detail .norrtag-kicker {
+  color: var(--norrtag-yellow) !important;
+  font-size: 20px !important;
+  line-height: 48px !important;
+}
+.norrtag-research {
+  margin-top: 20px;
+  padding-top: 100px;
+  padding-bottom: 32px;
+}
+.norrtag-research::before {
+  top: 40px;
+  bottom: -20px;
+}
+.norrtag-research-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: baseline;
+}
+.norrtag-research-title h4 {
+  font-size: 32px !important;
+  line-height: 30px !important;
+}
+.norrtag-research-count {
+  white-space: nowrap;
+  margin-right: 48px !important;
+}
+.norrtag-research-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 10px;
+  padding-block: 20px;
+}
+.norrtag-route {
+  justify-self: end;
+  width: 132px;
+  height: 120.483px;
+  object-fit: cover;
+}
+.norrtag-research-media {
+  padding-top: 10px;
+}
+.norrtag-research-media figcaption {
+  margin-top: 10.795px;
+  color: #e8e8e8;
+  font-size: 16px;
+  line-height: 21.6px;
+}
+.norrtag-probe-collage,
+.norrtag-phone-stage {
+  position: relative;
+  aspect-ratio: 591.5 / 370;
+}
+.norrtag-crop {
+  position: absolute;
+  overflow: hidden;
+}
+.norrtag-crop img {
+  object-fit: cover;
+  position: absolute;
+  max-width: none;
+}
+.norrtag-crop-poster {
+  left: 1.69%;
+  top: 2.7%;
+  width: 56.068%;
+  height: 94.5946%;
+  border-radius: 12.658px;
+}
+.norrtag-crop-poster img {
+  height: 100%;
+  width: 158.11%;
+  left: -34.85%;
+  top: 0.17%;
+}
+.norrtag-crop-basket {
+  left: 62.831%;
+  top: 2.74%;
+  width: 31.787%;
+  height: 40.461%;
+  border-radius: 11.392px;
+}
+.norrtag-crop-basket img {
+  height: 100.04%;
+  width: 119.25%;
+  left: -19.25%;
+  top: -0.02%;
+}
+.norrtag-crop-token {
+  left: 62.831%;
+  top: 46.774%;
+  width: 31.787%;
+  height: 50.4495%;
+  border-radius: 11.392px;
+}
+.norrtag-crop-token img {
+  height: 125.34%;
+  width: 165.92%;
+  left: -3.21%;
+  top: -18.98%;
+}
+.norrtag-phone-row {
+  position: absolute;
+  top: 2.7%;
+  left: 4.82%;
+  width: 90.335%;
+  height: 94.5946%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4.368%;
+}
+.norrtag-phone {
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+}
+.norrtag-phone img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 23.333px;
+  display: block;
+}
+.norrtag-findings {
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+.norrtag-findings > h3 {
+  margin-bottom: 20px;
+}
+.norrtag-findings .norrtag-insight-label {
+  font-size: 16px;
+  line-height: 24px;
+  color: #979797;
+  margin-bottom: 8px;
+}
+.norrtag-findings h4 {
+  margin-bottom: 8px;
+}
+.norrtag-workshop {
+  margin-top: 0;
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
+.norrtag-workshop::before {
+  top: -20px;
+  bottom: -6px;
+}
+.norrtag-workshop-statement {
+  font-size: 32px !important;
+  line-height: 30px !important;
+  margin-bottom: 20px !important;
+}
+.norrtag-workshop-media {
+  margin-top: 20px;
+  padding-block: 7px;
+}
+.norrtag-workshop-crop {
+  aspect-ratio: 591 / 282;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+}
+.norrtag-workshop-crop img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.norrtag-workshop-crop img:nth-child(2) {
+  width: 124.56%;
+  height: 164.57%;
+  left: -8.36%;
+  top: -21.37%;
+}
+.norrtag-detail .norrtag-workshop-caption {
+  margin-top: 20px;
+  font-size: 16px;
+  line-height: 21.6px;
+  color: #e8e8e8;
+}
+.norrtag-qualities {
+  margin-top: 30px;
+}
+.norrtag-qualities h4 {
+  margin-bottom: 8px;
+  color: #efefef !important;
+}
+.norrtag-service {
+  padding-top: 48px;
+}
+.norrtag-service-intro {
+  margin-top: 20px !important;
+  max-width: 1080px;
+}
+.norrtag-service-rows {
+  padding-top: 48px;
+  display: grid;
+  gap: 40px;
+}
+.norrtag-layer {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 28px;
+  border-top: 1px solid #dddcdd;
+  padding-top: 28px;
+  align-items: start;
+}
+.norrtag-layer-intro {
+  min-width: 0;
+}
+.norrtag-quality-label {
+  color: #979797;
+  font-size: 16px !important;
+  line-height: 24px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px !important;
+}
+.norrtag-layer h4 {
+  font-size: 24px !important;
+  line-height: 32px !important;
+  margin-bottom: 16px;
+}
+.norrtag-layer-intro > p:not(.norrtag-quality-label) {
+  max-width: 350px;
+}
+.norrtag-service-media {
+  position: relative;
+}
+.norrtag-service-media .project-media-caption {
+  display: none;
+}
+.norrtag-service-media .project-media-controls {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.norrtag-service-media:hover .project-media-controls,
+.norrtag-service-media:focus-within .project-media-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+.norrtag-prototype {
+  padding-top: 60px;
+}
+.norrtag-prototype-intro {
+  max-width: 1080px;
+  margin-top: 20px !important;
+}
+.norrtag-prototype .norrtag-three {
+  margin-top: 30px;
+}
+.norrtag-prototype-component .project-media-caption {
+  margin-top: 23.09px;
+}
+html[data-site-mode="figma3042"] .map-project-detail-topbar.is-on-norrtag-blue,
+html[data-site-mode="figma3042"] .map-project-inline-nav.is-on-norrtag-blue {
+  background: #2457a9;
+}
+.project-media {
+  margin-top: 12px;
+}
+.norrtag-wide {
+  margin-top: 28px;
+}
+.norrtag-dark {
+  background: #0d0d0d;
+  color: #f5f5f5;
+  padding: 60px 0 72px;
+  margin-top: 60px;
+}
+.norrtag-dark h3 {
+  font-size: 20px !important;
+  line-height: normal !important;
+  color: rgba(245, 245, 245, 0.6) !important;
+}
+.norrtag-detail .norrtag-statement p {
+  font-size: 32px;
+  line-height: 48px;
+  max-width: 1080px;
+}
+.norrtag-dark .norrtag-pair {
+  margin-top: 32px;
+}
+.norrtag-layer {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 28px;
+  border-top: 1px solid #dddcdd;
+  padding-top: 28px;
+  margin-top: 40px;
+}
+.norrtag-layer-intro,
+.norrtag-touchpoints {
+  min-width: 0;
+}
+.norrtag-touchpoint-list {
+  display: grid;
+  gap: 36px;
+}
+.norrtag-touchpoint-list .project-media {
+  max-width: 642px;
+}
+.norrtag-touchpoint-list .project-media[style*="9 / 16"] {
+  max-width: 300px;
+}
+.norrtag-touchpoints > .project-media {
+  margin-top: 28px;
+}
+.norrtag-journey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 36px;
+  padding-left: 24px;
+  margin: 28px 0;
+  font-size: 16px;
+  line-height: 24px;
+}
+.norrtag-credits {
+  padding-bottom: 72px;
+}
+.norrtag-credits dl {
+  display: grid;
+  grid-template-columns: minmax(100px, 220px) minmax(0, 1fr);
+  gap: 12px 28px;
+  font-size: 16px;
+  line-height: 24px;
+}
+.norrtag-credits dt {
+  color: #979797;
+}
+.norrtag-credits dd {
+  margin: 0;
+}
+.norrtag-credits a {
+  color: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  text-decoration: underline;
+}
+.project-media {
+  margin: 0;
+  min-width: 0;
+}
+.project-media-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--media-ratio, 16 / 9);
+  background: #e6e6e6;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+}
+.project-media-frame img,
+.project-media-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+.project-media-frame video {
+  background: #e6e6e6;
+}
+.project-media-caption {
+  margin-top: 18px;
+  font:
+    400 16px/21.6px var(--typo-latin-family),
+    sans-serif;
+  color: #979797;
+}
+.project-media-caption[hidden] {
+  display: none;
+}
+.project-media-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  color: #1b1b1b;
+  padding-top: 8px;
+}
+.project-media-controls button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font:
+    400 20px/24px var(--typo-latin-family),
+    sans-serif;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 8px;
+  cursor: pointer;
+  position: relative;
+}
+.project-media-controls .project-media-page {
+  min-width: 24px;
+  width: 24px;
+}
+.project-media-page::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  top: 12px;
+  left: 8px;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+}
+.project-media-page[aria-pressed="true"]::after {
+  background: currentColor;
+}
+.project-media-status {
+  margin-left: auto;
+  font:
+    400 16px/24px var(--typo-latin-family),
+    sans-serif;
+}
+.project-media:focus-visible,
+.project-media button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.project-media-enlarge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.norrtag-blueprint .project-media-frame.has-media {
+  overflow-x: auto;
+  touch-action: pan-x pan-y pinch-zoom;
+}
+.project-media-controls button {
+  font-weight: 400 !important;
+  font-size: 20px !important;
+  line-height: 24px !important;
+}
+.norrtag-blueprint .project-media-frame.has-media {
+  overflow-x: auto;
+  touch-action: pan-x pan-y pinch-zoom;
+}
+@media (max-width: 1079px) {
+  .norrtag-research-title {
+    flex-wrap: wrap;
+  }
+  .norrtag-research-count {
+    margin-right: 0 !important;
+  }
+  .norrtag-research-intro {
+    grid-template-columns: minmax(0, 1fr) 110px;
+  }
+  .norrtag-route {
+    width: 110px;
+    height: auto;
+    align-self: start;
+  }
+  .norrtag-layer {
+    grid-template-columns: minmax(0, 30%) minmax(0, 1fr);
+  }
+  .norrtag-hero {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+  }
+  .norrtag-introduction {
+    font-size: 18px !important;
+    line-height: 27px !important;
+  }
+  .norrtag-workshop-statement {
+    line-height: 1.2 !important;
+  }
+}
+@media (max-width: 767px) {
+  .norrtag-inner {
+    padding-inline: 20px;
+  }
+  .norrtag-detail p {
+    font-size: 18px;
+    line-height: 27px;
+  }
+  .norrtag-detail h3 {
+    font-size: 26px !important;
+    line-height: 36px !important;
+  }
+  .norrtag-opening {
+    padding-top: 24px;
+  }
+  .norrtag-metadata {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .norrtag-metadata > div:last-child {
+    text-align: left;
+  }
+  .norrtag-metadata p {
+    font-size: 15px;
+    line-height: 22.5px;
+  }
+  .norrtag-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 28px;
+  }
+  .norrtag-hero-figure {
+    width: 100%;
+  }
+  .norrtag-introduction {
+    max-width: none;
+  }
+  .norrtag-research {
+    padding-top: 48px;
+    margin-top: 32px;
+    padding-bottom: 24px;
+  }
+  .norrtag-research::before {
+    top: 0;
+    bottom: 0;
+  }
+  .norrtag-detail .norrtag-kicker {
+    font-size: 18px !important;
+    line-height: 32px !important;
+  }
+  .norrtag-research-title {
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .norrtag-research-title h4 {
+    font-size: 26px !important;
+    line-height: 32px !important;
+  }
+  .norrtag-research-count {
+    font-size: 15px !important;
+    line-height: 22.5px !important;
+    white-space: normal;
+  }
+  .norrtag-research-intro {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 20px;
+  }
+  .norrtag-route {
+    width: 88px;
+    margin-top: 8px;
+  }
+  .norrtag-pair,
+  .norrtag-three {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .norrtag-research-media figcaption {
+    font-size: 15px;
+    line-height: 20.25px;
+  }
+  .norrtag-phone img {
+    border-radius: 14px;
+  }
+  .norrtag-findings {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+  .norrtag-workshop {
+    padding-top: 24px;
+    padding-bottom: 32px;
+    margin-top: 0;
+  }
+  .norrtag-service {
+    padding-top: 40px;
+  }
+  .norrtag-prototype {
+    padding-top: 48px;
+  }
+  .norrtag-workshop::before {
+    top: 0;
+    bottom: 0;
+  }
+  .norrtag-workshop-statement {
+    font-size: 26px !important;
+    line-height: 34px !important;
+    margin-top: 8px !important;
+  }
+  .norrtag-workshop-crop {
+    border-radius: 12px;
+  }
+  .norrtag-layer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .norrtag-layer-intro > p:not(.norrtag-quality-label) {
+    max-width: none;
+  }
+  .norrtag-service-media .project-media-controls {
+    opacity: 1;
+    pointer-events: auto;
+    position: relative;
+  }
+  .norrtag-prototype .norrtag-three {
+    gap: 32px;
+  }
+  .norrtag-prototype-component .project-media-caption {
+    margin-top: 12px;
+  }
+  .project-media-caption {
+    font-size: 15px;
+    line-height: 20.25px;
+  }
+  .norrtag-blueprint .project-media-frame {
+    min-height: 320px;
+  }
+  .norrtag-blueprint .project-media-frame.has-media {
+    aspect-ratio: auto;
+  }
+  .norrtag-blueprint .project-media-frame.has-media img {
+    min-width: 960px;
+    object-fit: contain;
+    position: relative;
+    height: auto;
+  }
+  .norrtag-blueprint .project-media-enlarge {
+    width: max(100%, 960px);
+  }
+  html[data-site-mode="figma3042"]
+    .map-project-shell--norrtag
+    ~ .map-project-inline-nav
+    .map-project-inline-nav-btn {
+    width: 50%;
+    min-width: 0;
+    flex: 0 1 50%;
+  }
+  html[data-site-mode="figma3042"]
+    .map-project-shell--norrtag
+    ~ .map-project-inline-nav
+    .map-project-inline-nav-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .norrtag-service-media .project-media-controls {
+    transition: none;
+  }
+}
+/* Local regular face, isolated from existing project/homepage font resolution. */
+@font-face {
+  font-family: "Norrtag Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/projects/norrtag/fonts/AtkinsonHyperlegible-Regular.woff2")
+    format("woff2");
+}
+.map-project-shell--norrtag,
+.norrtag-detail {
+  --typo-latin-family: "Norrtag Atkinson Hyperlegible";
+  font-family: "Norrtag Atkinson Hyperlegible", sans-serif;
+}
+html[data-site-mode="figma3042"] #map-project-norrtag-root,
+html[data-site-mode="figma3042"]
+  #map-project-norrtag-root
+  :is(p, h3, h4, h5, a, button, figcaption, summary, dt, dd, li) {
+  font-family: "Norrtag Atkinson Hyperlegible", sans-serif !important;
+}
+.norrtag-detail .norrtag-workshop-statement {
+  font-size: 32px !important;
+  line-height: 30px !important;
+}
+@media (min-width: 1080px) {
+  .norrtag-hero {
+    width: calc(100% - 5px);
+  }
+}
+.norrtag-research-title {
+  align-items: start;
+}
+@media (max-width: 767px) {
+  .norrtag-detail .norrtag-workshop-statement {
+    font-size: 26px !important;
+    line-height: 34px !important;
+  }
+}
+.norrtag-detail .norrtag-layer {
+  margin: 0;
+}
+.norrtag-hero-figure > .project-media {
+  height: 100%;
+}
+.norrtag-hero-figure > .project-media .project-media-frame {
+  height: 100%;
+  aspect-ratio: auto;
+}
+.norrtag-hero-figure > .project-media .project-media-caption {
+  display: none;
+}
+/* Body insets follow the canonical Veritas stage at every structural breakpoint. */
+.norrtag-detail {
+  --norrtag-body-gutter: max(24px, calc((100% - 1392px) / 2));
+}
+@media (min-width: 1080px) {
+  .norrtag-inner {
+    width: calc(100% - var(--norrtag-body-gutter) * 2);
+    padding-left: calc((100% - var(--norrtag-body-gutter) * 2) * 0.023794);
+    padding-right: calc((100% - var(--norrtag-body-gutter) * 2) * 0.026438);
+  }
+}
+@media (min-width: 768px) and (max-width: 1079.98px) {
+  .norrtag-inner {
+    width: calc(100% - var(--norrtag-body-gutter) * 2);
+    padding-inline: 30px;
+  }
+}
+@media (max-width: 767px) {
+  .norrtag-inner {
+    width: 100%;
+    padding-inline: 20px;
+  }
+}
+.norrtag-findings::before {
+  inset: 0;
+}
+.norrtag-findings .norrtag-inner > h3 {
+  margin-bottom: 20px;
+}
+.norrtag-findings .norrtag-insight-label {
+  color: #f4bc41;
+}
+.norrtag-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.norrtag-hero-play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.norrtag-hero-play::after {
+  content: "";
+  display: block;
+  margin-left: 25px;
+  border-left: 20px solid white;
+  border-block: 12px solid transparent;
+  width: 0;
+}
+.norrtag-hero-figure:is(:hover, :focus-within) .norrtag-hero-play {
+  opacity: 1;
+}
+@media (hover: none) {
+  .norrtag-hero-play {
+    opacity: 1;
+  }
+}
+.norrtag-hero-play[hidden] {
+  display: none;
+}
+.norrtag-hero-play:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+.norrtag-phone video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 23.333px;
+  display: block;
+}
+.norrtag-probe-video::-webkit-media-controls {
+  display: none !important;
+}
+.norrtag-prototype {
+  padding-bottom: 60px;
+}
+@media (max-width: 767px) {
+  .norrtag-phone video {
+    border-radius: 14px;
+  }
+}
+
+/* Composed hover slides share the detail layouts, without captions or a surface. */
+#map-center-hover-preview .norrtag-preview-composition {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  align-items: center;
+  background: transparent;
+}
+#map-center-hover-preview .norrtag-preview-composition[hidden] {
+  display: none;
+}
+.norrtag-preview-composition * {
+  box-sizing: border-box;
+}
+.norrtag-preview-composition figure {
+  margin: 0;
+}
+#map-center-hover-preview .norrtag-preview-composition .norrtag-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.7%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+.norrtag-preview-composition .norrtag-phone video {
+  border-radius: 12%;
+}
+#map-center-hover-preview[data-media-project="norrtag"]
+  .map-center-hover-preview-frame::after {
+  display: none;
+}
+
+.norrtag-phone video[data-media-slot="probe-real-life"] {
+  object-fit: fill;
+}
+#map-project-norrtag-root .norrtag-service-media .project-media-frame {
+  background: #0d0d0d;
+}
+html[data-site-mode="figma3042"]
+  #map-project-inline-shell.map-project-shell--norrtag
+  #map-project-norrtag-root
+  .map-project-detail-section-c-conclusion-carousel-pagination-item {
+  border-color: rgba(17, 17, 17, 0.76);
+}
+html[data-site-mode="figma3042"]
+  #map-project-inline-shell.map-project-shell--norrtag
+  #map-project-norrtag-root
+  .map-project-detail-section-c-conclusion-carousel-pagination-item.is-active {
+  border-color: #111;
+}
+html[data-site-mode="figma3042"]
+  #map-project-inline-shell.map-project-shell--norrtag
+  #map-project-norrtag-root
+  .map-project-detail-section-c-conclusion-carousel-pagination-item::after {
+  background: var(--norrtag-blue);
+}
+html[data-site-mode="figma3042"]
+  #map-project-inline-shell.map-project-shell--norrtag
+  #map-project-norrtag-root
+  .map-project-detail-section-c-conclusion-carousel-nav-btn {
+  color: #111;
+}
+
+html[data-site-mode="figma3042"]
+  #map-project-inline-shell.map-project-shell--norrtag
+  #map-project-norrtag-root
+  .map-project-detail-section-c-conclusion-carousel-nav-btn:is(
+    :hover,
+    :focus-visible
+  ) {
+  color: #111;
+  outline-color: #111;
+}
+
+.norrtag-detail .norrtag-service-blueprint {
+  width: 100%;
+  margin: 16px 0 0 auto;
+}
+.norrtag-service-blueprint .project-media-frame {
+  background: transparent;
+}
+.norrtag-service-blueprint .project-media-frame img {
+  object-position: right center;
+}
+.norrtag-service-blueprint .project-media-caption {
+  display: none;
+}
+#map-center-hover-preview[data-media-project="norrtag"]
+  .map-center-hover-preview-pagination-item::after {
+  background: #2457a9;
+}
+@media (max-width: 767px) {
+  .norrtag-detail .norrtag-service-blueprint {
+    margin-top: 12px;
+  }
+  .norrtag-service-rows {
+    padding-top: 32px;
+  }
+}
+
+/* Original Figma image-fill transforms inside the 823×463 carousel viewport. */
+.norrtag-service-media .project-media-figma-crop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(465 / 463 * 100%);
+  overflow: hidden;
+}
+.norrtag-service-media .project-media-frame .project-media-figma-layer {
+  position: absolute;
+  inset: auto;
+  max-width: none;
+  object-fit: fill;
+}
+/* Veritas text-preview treatment, with Norrtåg's own type sizes and palette. */
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot,
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot .map-project-detail-hotspot-chip {
+  font: inherit;
+  min-height: 0;
+  line-height: inherit;
+  white-space: normal;
+  background: var(--norrtag-hotspot-color);
+  color: var(--norrtag-hotspot-ink);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.norrtag-hotspot--yellow { --norrtag-hotspot-color: var(--norrtag-yellow); --norrtag-hotspot-ink: #1b1b1b; }
+.norrtag-hotspot--blue { --norrtag-hotspot-color: var(--norrtag-blue); --norrtag-hotspot-ink: #fff; }
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot:hover,
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot:focus-visible,
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot.is-inline-active .map-project-detail-hotspot-chip {
+  background: var(--norrtag-hotspot-color);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--norrtag-hotspot-color) 22%, transparent), inset 0 0 0 1px #ffffff47;
+}
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot.map-project-detail-hotspot--inline-shell {
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+/* Wrap service-title highlights per text line instead of painting a rectangular box. */
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot--blue:not(.map-project-detail-hotspot--inline-shell),
+html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot--blue .map-project-detail-hotspot-chip {
+  display: inline;
+}
+/* A single service demonstration needs no carousel navigation or pagination. */
+#map-project-norrtag-root .map-project-detail-section-c-conclusion-carousel-footer[hidden] {
+  display: none !important;
+}
+#map-project-norrtag-root .norrtag-service-media video {
+  object-fit: contain !important;
+}
+/* The connected prototype uses the same responsive video/copy layout as the opening hero. */
+.norrtag-prototype-demo-figure {
+  aspect-ratio: 16 / 9;
+}
+/* Prototype: copy on the left, video on the right, aligned at their top edges. */
+.norrtag-prototype-demo {
+  grid-template-columns: 488fr 697fr;
+  align-items: start;
+}
+.norrtag-prototype-demo-figure {
+  grid-column: 2;
+  grid-row: 1;
+}
+.norrtag-prototype-demo > .norrtag-introduction {
+  grid-column: 1;
+  grid-row: 1;
+}
+@media (max-width: 1079px) {
+  .norrtag-prototype-demo {
+    grid-template-columns: 1fr 1.2fr;
+  }
+}
+@media (max-width: 767px) {
+  .norrtag-prototype-demo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .norrtag-prototype-demo-figure {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .norrtag-prototype-demo > .norrtag-introduction {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+/* Use the site's branded loading surface without changing media geometry. */
+.norrtag-route-host {
+  justify-self: end;
+  width: max-content;
+  aspect-ratio: 528 / 482;
+  border-radius: 12px;
+}
+.norrtag-route-host > img { display: block; }
+.norrtag-phone.brand-image-host { border-radius: 23.333px; }
+.norrtag-hero-figure[data-image-loading-state="loading"] .norrtag-hero-play {
+  opacity: 0;
+  pointer-events: none;
+}
+#map-project-norrtag-root .norrtag-service-media .project-media-frame[data-image-loading-state="loaded"] {
+  background: #0d0d0d !important;
+}
+#map-project-detail-hotspot-preview[data-norrtag-preview][data-image-loading-state="loading"] #map-project-detail-hotspot-preview-img {
+  width: var(--norrtag-preview-width);
+  height: var(--norrtag-preview-height);
+}
+.map-project-detail-hotspot-inline-preview[data-norrtag-preview][data-image-loading-state="loading"] {
+  aspect-ratio: var(--norrtag-preview-ratio);
+}

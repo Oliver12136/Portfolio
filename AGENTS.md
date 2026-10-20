@@ -30,3 +30,10 @@
 - Never deploy automatically. A local preview, Git push, or pull request is not permission to deploy production.
 - Do not run `wrangler deploy` or any equivalent production command without explicit user approval in the current conversation.
 
+
+## Local storage housekeeping
+
+- After each task, clean disposable files created by that task and check for stale local cache buildup.
+- Use `python3 scripts/clean-local-cache.py` to review safe cleanup candidates, then `--apply` to remove them when present.
+- This cleanup is authorized by the user. Only remove unopened, stale `.git/objects/pack/tmp_pack_*` files and untracked OS metadata. Preserve real Git packs/history, source files, original media, and unrelated untracked work.
+- Do not create scheduled background cleanup jobs unless the user requests one.

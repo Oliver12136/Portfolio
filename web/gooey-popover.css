@@ -1,0 +1,30 @@
+/* Only the temporary liquid background is filtered; live text/icons stay sharp. */
+.gooey-popover--animating {
+  isolation: isolate;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.gooey-popover-surface {
+  position: absolute;
+  display: block;
+  max-width: none;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.gooey-popover--animating > :not(.gooey-popover-surface) {
+  opacity: var(--gooey-copy-opacity, 0) !important;
+}
+.work-map-help:has(> .gooey-popover--animating) > .work-map-help-button {
+  position: relative;
+  z-index: 1;
+}
+/* Keep the existing inverted word visible while its tooltip retracts into it. */
+html[data-site-mode="figma3042"] .external-link-hoverfx.is-gooey-source {
+  color: var(--external-link-hover-fg) !important;
+}
+html[data-site-mode="figma3042"] .external-link-hoverfx.is-gooey-source::before {
+  transform: scaleY(1) !important;
+}

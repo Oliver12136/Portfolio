@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "new",
+  "account_id": "c5ae39479b52fd2023cc995ced8894ce",
+  "compatibility_date": "2026-10-17",
+  "workers_dev": true,
+  "preview_urls": true,
+  "keep_vars": true,
+  "assets": { "directory": "./web" },
+  "routes": [{ "pattern": "oghuzhan.work", "custom_domain": true }]
+}

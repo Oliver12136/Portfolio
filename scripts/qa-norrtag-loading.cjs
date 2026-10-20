@@ -1,0 +1,52 @@
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const assert = require('node:assert/strict');
+(async () => {
+  const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--disk-cache-size=1', '--media-cache-size=1'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = [], mediaRequests = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', req => { if (req.resourceType() === 'media' && /norrtag/.test(req.url())) mediaRequests.push(req.url()); });
+  let releasePoster, releaseVideo, releaseImage;
+  const posterGate = new Promise(resolve => releasePoster = resolve);
+  const videoGate = new Promise(resolve => releaseVideo = resolve);
+  const imageGate = new Promise(resolve => releaseImage = resolve);
+  await page.route('**/cover/figma-hero*.webp', async route => { await posterGate; await route.continue(); });
+  await page.route('**/figma-onboard-display.mp4', async route => { await videoGate; await route.continue(); });
+  await page.route('**/figma-station-display.webp', async route => { await imageGate; await route.continue(); });
+  try {
+    await page.goto('http://127.0.0.1:4173/#map-project=norrtag', { waitUntil: 'domcontentloaded' });
+    const hero = page.locator('.norrtag-opening .norrtag-hero-figure');
+    await page.waitForTimeout(300);
+    assert.equal(await hero.getAttribute('data-image-loading-state'), 'loading');
+    const skeleton = await hero.evaluate(e => ({ logo: getComputedStyle(e, '::after').backgroundImage, animation: getComputedStyle(e, '::before').animationName }));
+    assert(skeleton.logo.includes('Landingpage/logo.svg'));
+    assert(skeleton.animation.includes('brandImageSkeleton'));
+    assert.deepEqual(mediaRequests, [], 'Offscreen videos started loading at page entry');
+    releasePoster();
+    await page.waitForFunction(() => document.querySelector('.norrtag-opening .norrtag-hero-figure').dataset.imageLoadingState === 'loaded');
+    const carousel = page.locator('[data-media-slot="service-layer-0"]');
+    const frame = carousel.locator('.project-media-frame');
+    await carousel.scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => document.querySelector('[data-media-slot="service-layer-0"] .project-media-frame').dataset.imageLoadingState === 'loading');
+    assert.equal(await carousel.locator('video').last().getAttribute('src'), null, 'Inactive original service video was fetched');
+    releaseVideo();
+    await page.waitForFunction(() => document.querySelector('[data-media-slot="service-layer-0"] video').currentTime > 0);
+    assert.equal(await frame.getAttribute('data-image-loading-state'), 'loaded');
+    await carousel.locator('[aria-label="Next media"]').click();
+    assert.equal(await frame.getAttribute('data-image-loading-state'), 'loading');
+    releaseImage();
+    await page.waitForFunction(() => document.querySelector('[data-media-slot="service-layer-0"] .project-media-frame').dataset.imageLoadingState === 'loaded');
+    await page.locator('.norrtag-workshop-media').scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => [...document.querySelectorAll('.norrtag-workshop-crop')].every(e => e.dataset.imageLoadingState === 'loaded'));
+    const responsive = await page.locator('.norrtag-workshop-crop img').nth(2).evaluate(img => ({ width: img.naturalWidth, src: img.currentSrc }));
+    assert(responsive.width <= 2048 && responsive.src.includes('.webp'));
+    await page.locator('#map-project-inline-close').click();
+    await page.locator('#map-project-inline-shell').waitFor({ state: 'hidden' });
+    assert(await page.locator('.mypractice-map-axis').first().isVisible());
+    assert.deepEqual(errors, []);
+    console.log('PASS: branded loading while posters/videos/images are held; load-to-content transitions; inactive carousel sources deferred; no entry video requests; responsive photos; clean close.');
+  } finally {
+    releasePoster(); releaseVideo(); releaseImage();
+    await browser.close();
+  }
+})().catch(error => { console.error(error); process.exit(1); });

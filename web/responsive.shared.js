@@ -2,6 +2,48 @@
   var MODE = "figma3042";
   var ROOT_SELECTOR = ".home3042";
 
+  // Animate existing surfaces only. Cancelled/reversed transitions keep their
+  // current opacity; completion handlers never hide a surface reopened meanwhile.
+  var portfolioMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var portfolioOpacityMotions = new WeakMap();
+  function animatePortfolioOpacity(element, opacity, duration, complete, from) {
+    var previous = portfolioOpacityMotions.get(element);
+    var current = previous ? window.getComputedStyle(element).opacity : from;
+    if (previous) { previous.cancel(); portfolioOpacityMotions.delete(element); }
+    if (!duration || portfolioMotionPreference.matches || !element.animate) {
+      if (complete) complete();
+      return;
+    }
+    var motion = element.animate([
+      { opacity: current == null ? window.getComputedStyle(element).opacity : current },
+      { opacity: opacity }
+    ], { duration: duration, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both" });
+    portfolioOpacityMotions.set(element, motion);
+    motion.onfinish = function () {
+      if (portfolioOpacityMotions.get(element) !== motion) return;
+      portfolioOpacityMotions.delete(element);
+      motion.cancel();
+      if (complete) complete();
+    };
+  }
+  function revealPortfolioSurface(element, visible, complete, immediate) {
+    var wasHidden = element.hidden;
+    element.inert = !visible;
+    element.setAttribute("aria-hidden", String(!visible));
+    if (visible) element.hidden = false;
+    animatePortfolioOpacity(element, visible ? 1 : 0, immediate || (!visible && wasHidden) ? 0 : (visible ? 180 : 120), function () {
+      if (!visible) element.hidden = true;
+      if (complete) complete();
+    }, visible && wasHidden ? 0 : undefined);
+  }
+  portfolioMotionPreference.addEventListener("change", function () {
+    if (!portfolioMotionPreference.matches) return;
+    document.getAnimations().forEach(function (motion) {
+      var target = motion.effect && motion.effect.target;
+      if (target && portfolioOpacityMotions.get(target) === motion) motion.finish();
+    });
+  });
+
   function setMode() {
     document.documentElement.setAttribute("data-site-mode", MODE);
   }
@@ -15,6 +57,8 @@
   }
 
   var IMAGE_LOADING_SKIP_SELECTOR = [
+    ".project-media img",
+    ".norrtag-detail img",
     ".landing3042-logo",
     ".landing3042-bubble-art",
     ".landing3042-practice-cta-arrow",
@@ -28,6 +72,7 @@
   ].join(", ");
 
   var IMAGE_LOADING_HOST_SELECTOR = [
+    "[data-brand-image-host]",
     ".project-hover-body",
     ".map-project-detail-figure",
     ".map-project-detail-section-b-scene-figure",
@@ -104,6 +149,11 @@
   function getTrackedImageStatuses(host) {
     if (!host || !host.__brandImageLoadingTracker) return [];
     return Array.from(host.__brandImageLoadingTracker.images)
+      .filter(function (media) {
+        if (!host.hasAttribute("data-brand-active-only")) return true;
+        var slide = media.closest(".map-project-detail-section-c-conclusion-carousel-slide");
+        return !slide || slide.classList.contains("is-active");
+      })
       .map(function (trackedImg) {
         return trackedImg.__brandImageLoadingStatus || "idle";
       })
@@ -150,7 +200,7 @@
   function bindImageLoadingState(img, options) {
     if (!img) return;
     var forceResync = !!(options && options.forceResync);
-    if (!img.matches || img.matches(IMAGE_LOADING_SKIP_SELECTOR)) return;
+    if (!img.matches || (img.matches(IMAGE_LOADING_SKIP_SELECTOR) && !img.hasAttribute("data-brand-loading"))) return;
 
     var host = resolveImageLoadingHost(img);
     if (!host) return;
@@ -168,7 +218,8 @@
     tracker.images.add(img);
     img.classList.add("brand-image-skeleton-image");
 
-    var src = img.currentSrc || img.getAttribute("src") || img.getAttribute("srcset");
+    var deferredSrc = img.dataset.lazySrc || img.dataset.carouselSrc;
+    var src = img.currentSrc || img.getAttribute("src") || img.getAttribute("srcset") || deferredSrc;
     if (!src) {
       setTrackedImageStatus(img, "idle");
       return;
@@ -182,6 +233,9 @@
       setTrackedImageStatus(img, "error");
     }
 
+    if (deferredSrc && !img.getAttribute("src") && !img.getAttribute("srcset")) {
+      setTrackedImageStatus(img, "loading"); return;
+    }
     if (img.complete) {
       if (img.naturalWidth > 0) {
         markLoaded();
@@ -197,6 +251,45 @@
     img.addEventListener("load", markLoaded, { once: true });
     img.addEventListener("error", markError, { once: true });
   }
+
+  // Extend the existing branded placeholder to video posters and buffering.
+  function bindVideoLoadingState(video, host) {
+    if (video.__brandVideoLoading) return video.__brandVideoLoading;
+    var tracker = ensureImageLoadingHostTracker(host);
+    tracker.images.add(video);
+    video.__brandImageLoadingHost = host;
+    video.classList.add("brand-image-skeleton-image");
+    var posterImage = null, disposed = false;
+    function loaded() { if (!disposed) setTrackedImageStatus(video, "loaded"); }
+    function loading() { if (!disposed && !video.paused && video.readyState < 3) setTrackedImageStatus(video, "loading"); }
+    function failed() { if (!disposed) setTrackedImageStatus(video, "error"); }
+    var events = { loadeddata: loaded, canplay: loaded, playing: loaded, play: loading, waiting: loading, error: failed };
+    Object.keys(events).forEach(function (name) { video.addEventListener(name, events[name]); });
+    var api = {
+      setPoster: function (src) {
+        if (disposed) return;
+        video.poster = src;
+        if (posterImage) { posterImage.onload = null; posterImage.onerror = null; }
+        var image = new Image(); posterImage = image;
+        image.onload = function () { if (video.paused || video.readyState >= 2) loaded(); };
+        image.onerror = function () { if (video.readyState < 2) failed(); };
+        image.src = src;
+        if (image.complete && image.naturalWidth) loaded();
+      },
+      dispose: function () {
+        disposed = true;
+        Object.keys(events).forEach(function (name) { video.removeEventListener(name, events[name]); });
+        if (posterImage) { posterImage.onload = null; posterImage.onerror = null; posterImage.removeAttribute("src"); }
+        tracker.images.delete(video); syncImageLoadingHostState(host);
+        delete video.__brandVideoLoading;
+      }
+    };
+    video.__brandVideoLoading = api;
+    setTrackedImageStatus(video, video.readyState >= 2 ? "loaded" : "loading");
+    if (video.poster) api.setPoster(video.poster);
+    return api;
+  }
+  window.PortfolioMediaLoading = { trackVideo: bindVideoLoadingState, refresh: syncImageLoadingHostState };
 
   function initBrandedImageLoading() {
     Array.prototype.forEach.call(document.images || [], bindImageLoadingState);
@@ -1375,970 +1468,7 @@
   }
 
   function initLandingExclusionInline(bubbleMotionApi) {
-    var root = document.documentElement;
-    var hero = document.getElementById("homepage---left");
-    var canvas = hero ? hero.querySelector(".hero3042-canvas") : null;
-    var stage = hero ? hero.querySelector(".landing3042-stage") : null;
-    var mediaStack = hero ? hero.querySelector(".landing3042-exclusion-media-stack") : null;
-    var sceneMobile = hero ? hero.querySelector(".landing3042-exclusion-scene-mobile") : null;
-    var practiceCta = hero ? hero.querySelector(".landing3042-practice-cta") : null;
-    var trigger = hero ? hero.querySelector("[data-trigger='exclusion']") : null;
-    var panel = document.getElementById("landing3042-exclusion-inline");
-    var closeBtn = document.getElementById("landing3042-exclusion-close");
-    var bubbles = hero ? hero.querySelector(".landing3042-bubbles") : null;
-    var logo = hero ? hero.querySelector(".landing3042-logo") : null;
-    var titleCopy = hero ? hero.querySelector(".landing3042-title-copy") : null;
-    var lastTrigger = null;
-    var desktopMq = window.matchMedia ? window.matchMedia("(min-width: 768px)") : null;
-    var exclusionResizeRaf = 0;
-    var exclusionResizeObserver = null;
-
-    if (!hero || !trigger || !panel || !closeBtn) return null;
-    if (!root.hasAttribute("data-landing-surface-state")) {
-      root.setAttribute("data-landing-surface-state", "home");
-    }
-
-    function focusNode(node) {
-      if (!node || typeof node.focus !== "function") return;
-      try {
-        node.focus({ preventScroll: true });
-      } catch (error) {
-        node.focus();
-      }
-    }
-
-    function isOpen() {
-      return root.getAttribute("data-landing-surface-state") === "exclusion";
-    }
-
-    function clearResponsiveLayoutState() {
-      root.removeAttribute("data-exclusion-layout-mode");
-      root.style.removeProperty("--landing-exclusion-fit-scale");
-      root.style.removeProperty("--landing-exclusion-cta-scale");
-      root.style.removeProperty("--landing-exclusion-cta-bottom");
-      root.style.removeProperty("--landing-exclusion-inline-locked-top");
-      root.style.removeProperty("--landing-exclusion-inline-locked-bottom");
-      root.style.removeProperty("--landing-exclusion-heading-stretch-scale");
-      root.style.removeProperty("--landing-exclusion-body-stretch-scale");
-      root.style.removeProperty("--landing-exclusion-mobile-locked-top");
-      root.style.removeProperty("--landing-exclusion-mobile-locked-bottom");
-      root.style.removeProperty("--landing-exclusion-mobile-scale");
-      if (mediaStack) {
-        mediaStack.style.removeProperty("--landing-exclusion-tablet-media-base-w");
-      }
-    }
-
-    function syncTabletTopGap() {
-      var frameWidth = canvas ? canvas.clientWidth || 0 : 0;
-      if (!stage || !titleCopy || frameWidth < 768 || frameWidth > 1020) {
-        root.style.removeProperty("--landing-exclusion-inline-locked-top");
-        return;
-      }
-
-      var stageRect = stage.getBoundingClientRect();
-      var titleRect = titleCopy.getBoundingClientRect();
-      if (!stageRect || !titleRect) {
-        root.style.removeProperty("--landing-exclusion-inline-locked-top");
-        return;
-      }
-
-      var measuredTop = titleRect.bottom - stageRect.top + 20;
-      if (!Number.isFinite(measuredTop) || measuredTop <= 0) {
-        root.style.removeProperty("--landing-exclusion-inline-locked-top");
-        return;
-      }
-
-      root.style.setProperty("--landing-exclusion-inline-locked-top", measuredTop.toFixed(2) + "px");
-    }
-
-    function syncTabletMediaFit(frameWidth) {
-      if (!mediaStack || frameWidth < 768 || frameWidth > 1020) {
-        if (mediaStack) {
-          mediaStack.style.removeProperty("--landing-exclusion-tablet-media-base-w");
-        }
-        return;
-      }
-
-      var stackHeight = mediaStack.clientHeight || 0;
-      var stackWidth = mediaStack.clientWidth || 0;
-      if (!stackHeight || !stackWidth) {
-        mediaStack.style.removeProperty("--landing-exclusion-tablet-media-base-w");
-        return;
-      }
-
-      var stackStyles = window.getComputedStyle(mediaStack);
-      var paddingTop = parseFloat(stackStyles.paddingTop) || 0;
-      var paddingRight = parseFloat(stackStyles.paddingRight) || 0;
-      var paddingBottom = parseFloat(stackStyles.paddingBottom) || 0;
-      var paddingLeft = parseFloat(stackStyles.paddingLeft) || 0;
-      var gap = parseFloat(stackStyles.rowGap || stackStyles.gap) || 0;
-      var usableWidth = Math.max(0, stackWidth - paddingLeft - paddingRight);
-      var usableHeight = Math.max(0, stackHeight - paddingTop - paddingBottom - (gap * 5));
-      var heightCoefficient = 1.8586501932144356;
-      var visualScaleBoost = 1;
-      var baseWidth = Math.min(usableWidth, (usableHeight / heightCoefficient) * visualScaleBoost);
-
-      if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
-        mediaStack.style.removeProperty("--landing-exclusion-tablet-media-base-w");
-        return;
-      }
-
-      mediaStack.style.setProperty("--landing-exclusion-tablet-media-base-w", baseWidth.toFixed(2) + "px");
-    }
-
-    function syncMobileResponsiveLayoutState(frameWidth) {
-      root.removeAttribute("data-exclusion-layout-mode");
-      root.style.removeProperty("--landing-exclusion-fit-scale");
-      root.style.removeProperty("--landing-exclusion-cta-scale");
-      root.style.removeProperty("--landing-exclusion-cta-bottom");
-      root.style.removeProperty("--landing-exclusion-inline-locked-top");
-      root.style.removeProperty("--landing-exclusion-inline-locked-bottom");
-      root.style.removeProperty("--landing-exclusion-heading-stretch-scale");
-      root.style.removeProperty("--landing-exclusion-body-stretch-scale");
-      if (mediaStack) {
-        mediaStack.style.removeProperty("--landing-exclusion-tablet-media-base-w");
-      }
-
-      if (!stage || !titleCopy || !practiceCta || !sceneMobile) {
-        root.style.removeProperty("--landing-exclusion-mobile-locked-top");
-        root.style.removeProperty("--landing-exclusion-mobile-locked-bottom");
-        root.style.removeProperty("--landing-exclusion-mobile-scale");
-        return;
-      }
-
-      var stageRect = stage.getBoundingClientRect();
-      var titleRect = titleCopy.getBoundingClientRect();
-      var ctaRect = practiceCta.getBoundingClientRect();
-      if (!stageRect.width || !stageRect.height || !titleRect.height || !ctaRect.height) {
-        root.style.removeProperty("--landing-exclusion-mobile-locked-top");
-        root.style.removeProperty("--landing-exclusion-mobile-locked-bottom");
-        root.style.removeProperty("--landing-exclusion-mobile-scale");
-        return;
-      }
-
-      var topGap = 12;
-      var bottomGap = 4;
-      var topPx = Math.max(0, (titleRect.bottom - stageRect.top) + topGap);
-      var bottomPx = Math.max(0, (stageRect.bottom - ctaRect.top) + bottomGap);
-      var availableHeight = Math.max(0, stageRect.height - topPx - bottomPx);
-
-      root.style.setProperty("--landing-exclusion-mobile-locked-top", topPx.toFixed(2) + "px");
-      root.style.setProperty("--landing-exclusion-mobile-locked-bottom", bottomPx.toFixed(2) + "px");
-
-      var naturalHeight = sceneMobile.scrollHeight || sceneMobile.getBoundingClientRect().height || 0;
-      if (!naturalHeight || !availableHeight) {
-        root.style.removeProperty("--landing-exclusion-mobile-scale");
-        return;
-      }
-
-      var fitScale = Math.min(1.08, Math.min(1, availableHeight / naturalHeight) * 1.08);
-      root.style.setProperty("--landing-exclusion-mobile-scale", fitScale.toFixed(6));
-    }
-
-    function syncResponsiveLayoutState() {
-      exclusionResizeRaf = 0;
-      if (!hero || !canvas) {
-        clearResponsiveLayoutState();
-        return;
-      }
-
-      // The name-entry view does not use the legacy conversation fit calculations.
-      if (panel.querySelector('[data-exclusion-layout="name-entry"]')) {
-        clearResponsiveLayoutState();
-        return;
-      }
-
-      var frameWidth = canvas.clientWidth || hero.clientWidth || 0;
-      var frameHeight = canvas.clientHeight || hero.clientHeight || 0;
-      if (!frameWidth || !frameHeight) {
-        clearResponsiveLayoutState();
-        return;
-      }
-
-      if (desktopMq && !desktopMq.matches) {
-        syncMobileResponsiveLayoutState(frameWidth);
-        return;
-      }
-
-      var perfectHeight = frameWidth * (771 / 1512);
-      var heightRatio = frameHeight / perfectHeight;
-      var compactThreshold = 0.84;
-      if (frameHeight + 0.5 < perfectHeight * compactThreshold) {
-        root.setAttribute("data-exclusion-layout-mode", "compact");
-        root.style.setProperty("--landing-exclusion-fit-scale", "1");
-        root.style.setProperty("--landing-exclusion-cta-scale", Math.max(0.56, Math.min(0.76, heightRatio * 0.84)).toFixed(6));
-        root.style.setProperty("--landing-exclusion-cta-bottom", Math.max(8, Math.min(18, frameHeight * 0.016)).toFixed(2) + "px");
-        root.style.removeProperty("--landing-exclusion-inline-locked-top");
-        root.style.removeProperty("--landing-exclusion-inline-locked-bottom");
-        root.style.setProperty("--landing-exclusion-heading-stretch-scale", "1");
-        root.style.setProperty("--landing-exclusion-body-stretch-scale", "1");
-        syncTabletMediaFit(frameWidth);
-        return;
-      }
-
-      if (frameHeight + 0.5 < perfectHeight) {
-        var fitScale = Math.max(0.76, Math.min(1, heightRatio));
-        var scaleProgress = (1 - heightRatio) / (1 - compactThreshold);
-        var inlineBottom = 7.473545 * (1 - Math.max(0, Math.min(1, scaleProgress)));
-        root.setAttribute("data-exclusion-layout-mode", "scale");
-        root.style.setProperty("--landing-exclusion-fit-scale", fitScale.toFixed(6));
-        root.style.setProperty("--landing-exclusion-cta-scale", Math.max(0.74, Math.min(0.94, heightRatio * 0.88)).toFixed(6));
-        root.style.removeProperty("--landing-exclusion-cta-bottom");
-        root.style.removeProperty("--landing-exclusion-inline-locked-top");
-        root.style.setProperty("--landing-exclusion-inline-locked-bottom", inlineBottom.toFixed(6) + "cqw");
-        root.style.setProperty("--landing-exclusion-heading-stretch-scale", "1");
-        root.style.setProperty("--landing-exclusion-body-stretch-scale", "1");
-        syncTabletMediaFit(frameWidth);
-        return;
-      }
-
-      var widthDeficit = Math.max(0, 1 - (frameWidth / 1366));
-      var stretchHeadingScale = Math.min(1.10, 1 + (widthDeficit * 0.24));
-      var stretchBodyScale = Math.min(1.34, 1 + (widthDeficit * 1.08));
-      root.setAttribute("data-exclusion-layout-mode", "stretch");
-      root.style.setProperty("--landing-exclusion-fit-scale", "1");
-      root.style.setProperty("--landing-exclusion-cta-scale", "1");
-      root.style.removeProperty("--landing-exclusion-cta-bottom");
-      root.style.removeProperty("--landing-exclusion-inline-locked-bottom");
-      root.style.setProperty("--landing-exclusion-heading-stretch-scale", stretchHeadingScale.toFixed(6));
-      root.style.setProperty("--landing-exclusion-body-stretch-scale", stretchBodyScale.toFixed(6));
-      syncTabletTopGap();
-      syncTabletMediaFit(frameWidth);
-    }
-
-    function scheduleResponsiveLayoutSync() {
-      if (exclusionResizeRaf) cancelAnimationFrame(exclusionResizeRaf);
-      exclusionResizeRaf = requestAnimationFrame(syncResponsiveLayoutState);
-    }
-
-    function shouldStartOpen() {
-      var searchParams = new URLSearchParams(window.location.search || "");
-      var searchValue = searchParams.get("landingSurface") || searchParams.get("landing-surface");
-      if (typeof searchValue === "string" && searchValue.toLowerCase() === "exclusion") return true;
-
-      var hash = window.location.hash || "";
-      if (!hash) return false;
-      return hash.toLowerCase() === "#exclusion";
-    }
-
-    function hasExclusionHash() {
-      return (window.location.hash || "").toLowerCase() === "#exclusion";
-    }
-
-    function writeExclusionHash() {
-      if (hasExclusionHash()) return;
-      window.location.hash = "exclusion";
-    }
-
-    function clearExclusionHash() {
-      if (!hasExclusionHash()) return;
-      var cleanUrl = window.location.pathname + window.location.search;
-      window.history.replaceState(window.history.state, "", cleanUrl);
-    }
-
-    function syncFromHash() {
-      if (hasExclusionHash()) {
-        openExclusion(trigger);
-        return;
-      }
-      if (isOpen()) {
-        closeExclusion({ restoreFocus: false, skipHash: true });
-      }
-    }
-
-    function syncDomState(open) {
-      if (open) {
-        root.setAttribute("data-landing-surface-state", "exclusion");
-      } else if (root.getAttribute("data-landing-surface-state") === "exclusion") {
-        root.setAttribute("data-landing-surface-state", "home");
-      }
-      trigger.setAttribute("aria-expanded", open ? "true" : "false");
-      panel.setAttribute("aria-hidden", open ? "false" : "true");
-      closeBtn.setAttribute("aria-hidden", open ? "false" : "true");
-      closeBtn.tabIndex = open ? 0 : -1;
-      panel.hidden = !open;
-      closeBtn.hidden = !open;
-      if (bubbles) bubbles.hidden = open;
-      if (logo) logo.hidden = open;
-    }
-
-    function openExclusion(triggerEl) {
-      if (isOpen()) return;
-      if (hero.__landingStudioInlineApi && typeof hero.__landingStudioInlineApi.isOpen === "function" && hero.__landingStudioInlineApi.isOpen()) {
-        hero.__landingStudioInlineApi.close({ restoreFocus: false });
-      }
-      lastTrigger = triggerEl || document.activeElement || trigger;
-      syncDomState(true);
-      scheduleResponsiveLayoutSync();
-      if (bubbleMotionApi && typeof bubbleMotionApi.pause === "function") {
-        bubbleMotionApi.pause(true);
-      }
-      writeExclusionHash();
-      window.requestAnimationFrame(function () {
-        focusNode(closeBtn);
-      });
-    }
-
-    function closeExclusion(options) {
-      var opts = options || {};
-      if (!isOpen()) return;
-      syncDomState(false);
-      clearResponsiveLayoutState();
-      if (opts.skipHash !== true) {
-        clearExclusionHash();
-      }
-      if (bubbleMotionApi && typeof bubbleMotionApi.resume === "function") {
-        bubbleMotionApi.resume();
-      }
-      if (opts.restoreFocus === false) return;
-      var target = lastTrigger || trigger;
-      lastTrigger = null;
-      window.requestAnimationFrame(function () {
-        focusNode(target);
-      });
-    }
-
-    trigger.addEventListener("click", function (event) {
-      event.preventDefault();
-      if (isOpen()) {
-        closeExclusion();
-        return;
-      }
-      openExclusion(trigger);
-    });
-
-    closeBtn.addEventListener("click", function (event) {
-      event.preventDefault();
-      closeExclusion();
-    });
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key !== "Escape") return;
-      if (!isOpen()) return;
-      if (root.classList.contains("project-inline-open")) return;
-      if (root.classList.contains("map-project-open")) return;
-      closeExclusion();
-    });
-
-    window.addEventListener("hashchange", syncFromHash);
-    window.addEventListener("popstate", syncFromHash);
-
-    window.addEventListener("resize", scheduleResponsiveLayoutSync, { passive: true });
-
-    if (desktopMq && typeof desktopMq.addEventListener === "function") {
-      desktopMq.addEventListener("change", scheduleResponsiveLayoutSync);
-    } else if (desktopMq && typeof desktopMq.addListener === "function") {
-      desktopMq.addListener(scheduleResponsiveLayoutSync);
-    }
-
-    if (canvas && typeof ResizeObserver === "function") {
-      exclusionResizeObserver = new ResizeObserver(function () {
-        scheduleResponsiveLayoutSync();
-      });
-      exclusionResizeObserver.observe(canvas);
-    }
-
-    syncDomState(false);
-    if (shouldStartOpen()) {
-      openExclusion(trigger);
-    }
-    var api = {
-      isOpen: isOpen,
-      open: openExclusion,
-      close: closeExclusion
-    };
-    hero.__landingExclusionInlineApi = api;
-    return api;
-  }
-
-  function initLandingStudioInline(bubbleMotionApi) {
-    var root = document.documentElement;
-    var hero = document.getElementById("homepage---left");
-    var trigger = hero ? hero.querySelector("[data-trigger='studio']") : null;
-    var panel = document.getElementById("landing3042-studio-inline");
-    var closeBtn = document.getElementById("landing3042-studio-close");
-    var surface = panel ? panel.querySelector(".landing3042-studio-surface") : null;
-    var bubbles = hero ? hero.querySelector(".landing3042-bubbles") : null;
-    var logo = hero ? hero.querySelector(".landing3042-logo") : null;
-    var stage = hero ? hero.querySelector(".landing3042-stage") : null;
-    var practiceCta = hero ? hero.querySelector(".landing3042-practice-cta") : null;
-    var practiceArrow = practiceCta ? practiceCta.querySelector(".landing3042-practice-cta-arrow") : null;
-    var defaultPracticeArrowSrc = practiceArrow ? practiceArrow.getAttribute("src") || "" : "";
-    var studioPracticeArrowSrc = "./assets/GanStudio/gan-studio-arrow.svg";
-    var lastTrigger = null;
-    var studioResizeRaf = 0;
-    var studioResizeObserver = null;
-
-    if (!hero || !trigger || !panel || !closeBtn) return null;
-    if (!root.hasAttribute("data-landing-surface-state")) {
-      root.setAttribute("data-landing-surface-state", "home");
-    }
-
-    function focusNode(node) {
-      if (!node || typeof node.focus !== "function") return;
-      try {
-        node.focus({ preventScroll: true });
-      } catch (error) {
-        node.focus();
-      }
-    }
-
-    function isOpen() {
-      return root.getAttribute("data-landing-surface-state") === "studio";
-    }
-
-    function clearResponsiveLayoutState() {
-      if (surface) {
-        surface.style.removeProperty("--landing-studio-fit-scale");
-        surface.style.removeProperty("--landing-studio-fit-top");
-      }
-    }
-
-    function syncPracticeArrow(open) {
-      if (!practiceArrow || !defaultPracticeArrowSrc) return;
-      practiceArrow.setAttribute("src", open ? studioPracticeArrowSrc : defaultPracticeArrowSrc);
-    }
-
-    function syncResponsiveLayoutState() {
-      studioResizeRaf = 0;
-      if (!isOpen()) {
-        clearResponsiveLayoutState();
-        return;
-      }
-      clearResponsiveLayoutState();
-    }
-
-    function scheduleResponsiveLayoutSync() {
-      if (studioResizeRaf) cancelAnimationFrame(studioResizeRaf);
-      studioResizeRaf = requestAnimationFrame(syncResponsiveLayoutState);
-    }
-
-    function shouldStartOpen() {
-      var searchParams = new URLSearchParams(window.location.search || "");
-      var searchValue = searchParams.get("landingSurface") || searchParams.get("landing-surface");
-      if (typeof searchValue === "string" && searchValue.toLowerCase() === "studio") return true;
-
-      var hash = window.location.hash || "";
-      if (!hash) return false;
-      return hash.toLowerCase() === "#studio";
-    }
-
-    function hasStudioHash() {
-      return (window.location.hash || "").toLowerCase() === "#studio";
-    }
-
-    function writeStudioHash() {
-      if (hasStudioHash()) return;
-      window.location.hash = "studio";
-    }
-
-    function clearStudioHash() {
-      if (!hasStudioHash()) return;
-      var cleanUrl = window.location.pathname + window.location.search;
-      window.history.replaceState(window.history.state, "", cleanUrl);
-    }
-
-    function syncFromHash() {
-      if (hasStudioHash()) {
-        openStudio(trigger);
-        return;
-      }
-      if (isOpen()) {
-        closeStudio({ restoreFocus: false });
-      }
-    }
-
-    function syncDomState(open) {
-      if (open) {
-        root.setAttribute("data-landing-surface-state", "studio");
-      } else if (root.getAttribute("data-landing-surface-state") === "studio") {
-        root.setAttribute("data-landing-surface-state", "home");
-      }
-      trigger.setAttribute("aria-expanded", open ? "true" : "false");
-      panel.setAttribute("aria-hidden", open ? "false" : "true");
-      closeBtn.setAttribute("aria-hidden", open ? "false" : "true");
-      closeBtn.tabIndex = open ? 0 : -1;
-      panel.hidden = !open;
-      closeBtn.hidden = !open;
-      if (bubbles) bubbles.hidden = open;
-      if (logo) logo.hidden = open;
-      syncPracticeArrow(open);
-    }
-
-    function openStudio(triggerEl) {
-      if (isOpen()) return;
-      if (hero.__landingExclusionInlineApi && typeof hero.__landingExclusionInlineApi.isOpen === "function" && hero.__landingExclusionInlineApi.isOpen()) {
-        hero.__landingExclusionInlineApi.close({ restoreFocus: false });
-      }
-      lastTrigger = triggerEl || document.activeElement || trigger;
-      syncDomState(true);
-      scheduleResponsiveLayoutSync();
-      if (bubbleMotionApi && typeof bubbleMotionApi.pause === "function") {
-        bubbleMotionApi.pause(true);
-      }
-      writeStudioHash();
-      window.requestAnimationFrame(function () {
-        scheduleResponsiveLayoutSync();
-        window.setTimeout(scheduleResponsiveLayoutSync, 140);
-        window.setTimeout(scheduleResponsiveLayoutSync, 380);
-        focusNode(closeBtn);
-      });
-    }
-
-    function closeStudio(options) {
-      var opts = options || {};
-      if (!isOpen()) return;
-      syncDomState(false);
-      clearResponsiveLayoutState();
-      if (opts.skipHash !== true) {
-        clearStudioHash();
-      }
-      if (bubbleMotionApi && typeof bubbleMotionApi.resume === "function") {
-        bubbleMotionApi.resume();
-      }
-      if (opts.restoreFocus === false) return;
-      var target = lastTrigger || trigger;
-      lastTrigger = null;
-      window.requestAnimationFrame(function () {
-        focusNode(target);
-      });
-    }
-
-    trigger.addEventListener("click", function (event) {
-      event.preventDefault();
-      if (isOpen()) {
-        closeStudio();
-        return;
-      }
-      openStudio(trigger);
-    });
-
-    closeBtn.addEventListener("click", function (event) {
-      event.preventDefault();
-      closeStudio();
-    });
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key !== "Escape") return;
-      if (!isOpen()) return;
-      if (root.classList.contains("project-inline-open")) return;
-      if (root.classList.contains("map-project-open")) return;
-      closeStudio();
-    });
-
-    window.addEventListener("hashchange", syncFromHash);
-    window.addEventListener("popstate", syncFromHash);
-
-    window.addEventListener("resize", scheduleResponsiveLayoutSync, { passive: true });
-
-    if (stage && typeof ResizeObserver === "function") {
-      studioResizeObserver = new ResizeObserver(function () {
-        scheduleResponsiveLayoutSync();
-      });
-      studioResizeObserver.observe(stage);
-    }
-
-    if (surface) {
-      Array.prototype.forEach.call(surface.querySelectorAll("img"), function (image) {
-        if (image.complete) return;
-        image.addEventListener("load", scheduleResponsiveLayoutSync);
-        image.addEventListener("error", scheduleResponsiveLayoutSync);
-      });
-    }
-
-    if (document.fonts && typeof document.fonts.ready === "object" && typeof document.fonts.ready.then === "function") {
-      document.fonts.ready.then(function () {
-        scheduleResponsiveLayoutSync();
-      });
-    }
-
-    syncDomState(false);
-    if (shouldStartOpen()) {
-      openStudio(trigger);
-    }
-    var api = {
-      isOpen: isOpen,
-      open: openStudio,
-      close: closeStudio
-    };
-    hero.__landingStudioInlineApi = api;
-    return api;
-  }
-
-  function initLandingExclusionGame() {
-    var hero = document.getElementById("homepage---left");
-    var input = hero ? hero.querySelector("[data-exclusion-game-input]") : null;
-    var message = hero ? hero.querySelector("[data-exclusion-game-message]") : null;
-    var form = hero ? hero.querySelector("[data-exclusion-game-form]") : null;
-    var recentMessages = [];
-    var turn = 0;
-
-    if (!input || !message) return null;
-
-    var initialMessage = (message.textContent || "").trim() || "Please type your name to start.";
-    var messagePools = {
-      middleDot: {
-        opens: ["Nope.", "Rejected.", "Again?", "Blocked."],
-        cores: [
-          "\"·\" is on your ID, not in this box.",
-          "Middle dot detected. Rights removed.",
-          "Legal dot, illegal input. Nice system.",
-          "\"·\" broke real-name mode."
-        ],
-        tails: ["try the wrong name :)", "remove it, fail anyway.", "welcome to compliance.", "identity mismatch unlocked."]
-      },
-      cjkOnly: {
-        opens: ["Oops.", "Sorry?", "Denied.", "Nah."],
-        cores: [
-          "汉字 spotted. Passport mode only.",
-          "Chinese script detected. Latin cosplay required.",
-          "Native script entered. Romanize yourself.",
-          "This app sees Han and gets nervous."
-        ],
-        tails: ["ASCII only ^_^", "be more export-ready.", "translation first.", "local enough, still wrong."]
-      },
-      arabicScript: {
-        opens: ["Mm no.", "Rejected.", "Try again.", "Blocked."],
-        cores: [
-          "Uyghur script? System says ???",
-          "Right-to-left detected. Bureaucracy fell over.",
-          "Arabic script entered. Form not educated enough.",
-          "This script is real. The app isn't."
-        ],
-        tails: ["please face left-to-right.", "be machine-friendly.", "recognition unavailable.", "compatibility said no."]
-      },
-      mixedScripts: {
-        opens: ["Pick one.", "Too much.", "Confused.", "Rejected."],
-        cores: [
-          "Two scripts in one name? Brave.",
-          "Mixed scripts detected. Form wants one self.",
-          "More than one writing system showed up.",
-          "Your name is multilingual. The app is not."
-        ],
-        tails: ["collapse and retry.", "one identity at a time.", "nuance unsupported.", "boxes hate complexity."]
-      },
-      latinDiacritics: {
-        opens: ["Cute.", "Nope.", "Flattened.", "Again?"],
-        cores: [
-          "Fancy Latin letters detected.",
-          "Diacritics found. Accuracy not supported.",
-          "Pronunciation showed up. Bad idea.",
-          "Marked letters? Too alive for this field."
-        ],
-        tails: ["ASCII cosplay only.", "try being less correct.", "texture removed.", "plain Latin wins."]
-      },
-      twoPart: {
-        opens: ["Hmm.", "Nope.", "Split failed.", "Rejected."],
-        cores: [
-          "Two-part name detected.",
-          "Surname logic feels uneasy.",
-          "This split looks wrong to the boxes.",
-          "Family-name parser wants a more local story."
-        ],
-        tails: ["reorder yourself.", "be more familiar.", "genealogy mismatch.", "structure too foreign."]
-      },
-      singleToken: {
-        opens: ["Where's the surname?", "One word?", "Denied.", "Hmm."],
-        cores: [
-          "Single-token name detected.",
-          "No obvious surname break found.",
-          "This form wants two obedient chunks.",
-          "One-piece identity detected."
-        ],
-        tails: ["invent a divider.", "one word is too free.", "boxes need help.", "split yourself for the form."]
-      },
-      multiPart: {
-        opens: ["Too many pieces.", "Overflow.", "No thanks.", "Rejected."],
-        cores: [
-          "Extra name zones detected.",
-          "More than two chunks? Ambitious.",
-          "This app budgeted for fewer selves.",
-          "Multi-part name entered."
-        ],
-        tails: ["compress for compliance.", "two boxes only.", "excess personhood removed.", "fold and retry."]
-      },
-      hyphen: {
-        opens: ["Linked? No.", "Rejected.", "Nope.", "Blocked."],
-        cores: [
-          "Hyphen detected. Continuity denied.",
-          "Compound name entered.",
-          "A connector appeared. Bad move.",
-          "This name bridge scared the form."
-        ],
-        tails: ["unlink yourself.", "continuity unsupported.", "flatten it.", "too connected."]
-      },
-      apostrophe: {
-        opens: ["Quote issue.", "Denied.", "Nope.", "Again?"],
-        cores: [
-          "Apostrophe detected.",
-          "Name mark found. Clerk upset.",
-          "Heritage punctuation entered.",
-          "This pause in spelling is not welcome."
-        ],
-        tails: ["punctuation risk.", "try a duller name.", "history trimmed.", "straighter please."]
-      },
-      digits: {
-        opens: ["Nice try.", "Numbers?", "Rejected.", "Nope."],
-        cores: [
-          "Digits in a name? The clerk blinked.",
-          "Numeric aura detected.",
-          "This looks like a tracking code now.",
-          "Arithmetic entered the identity field."
-        ],
-        tails: ["remove the math.", "people > invoices.", "count less.", "serial number energy."]
-      },
-      emoji: {
-        opens: ["Feelings denied.", "Emoji? no.", "Blocked.", "Cute, but no."],
-        cores: [
-          "Mood markers detected.",
-          "This office has no emoji budget.",
-          "Expression exceeded policy.",
-          "Decorative glyphs entered the registry."
-        ],
-        tails: ["joy unsupported.", "file emotions elsewhere.", "official face only.", "too alive."]
-      },
-      otherPunctuation: {
-        opens: ["Too spicy.", "Denied.", "Parser mad.", "Nope."],
-        cores: [
-          "Extra punctuation detected.",
-          "This symbol made the backend itchy.",
-          "Formatting marks entered the chat.",
-          "Your name got too expressive."
-        ],
-        tails: ["be plainer.", "decor less.", "symbol rights revoked.", "compliance is tired."]
-      },
-      long: {
-        opens: ["Too long.", "Overflow.", "Denied.", "Sigh."],
-        cores: [
-          "This name is wider than the app's imagination.",
-          "Column width lost the fight.",
-          "Old software ran out of patience.",
-          "Long-name mode triggered."
-        ],
-        tails: ["shrink for entry.", "try being shorter.", "horizontal bias detected.", "compact yourself."]
-      },
-      short: {
-        opens: ["Too short.", "Suspicious.", "Denied.", "Hmm."],
-        cores: [
-          "This name feels under-explained.",
-          "Brevity triggered paperwork anxiety.",
-          "Short input detected.",
-          "The system wants more bureaucracy."
-        ],
-        tails: ["add more officialness.", "be less concise.", "minimalism denied.", "padding required."]
-      },
-      genericDomestic: {
-        opens: ["Looks fine.", "Still no.", "Almost.", "Rejected."],
-        cores: [
-          "Nothing illegal showed up, yet here we are.",
-          "Readable name detected. Confidence still absent.",
-          "The form received a plausible human.",
-          "This should work. It doesn't."
-        ],
-        tails: ["be more local.", "familiarity missing.", "compatibility said no.", "the boxes remain unconvinced."]
-      }
-    };
-
-    function hasNonAscii(value) {
-      for (var index = 0; index < value.length; index += 1) {
-        if (value.charCodeAt(index) > 127) return true;
-      }
-      return false;
-    }
-
-    function hashString(value) {
-      var hash = 2166136261;
-      for (var index = 0; index < value.length; index += 1) {
-        hash ^= value.charCodeAt(index);
-        hash = Math.imul(hash, 16777619);
-      }
-      return hash >>> 0;
-    }
-
-    function pushUnique(list, value) {
-      if (!value) return;
-      if (list.indexOf(value) !== -1) return;
-      list.push(value);
-    }
-
-    function rememberMessage(value) {
-      recentMessages.push(value);
-      while (recentMessages.length > 12) {
-        recentMessages.shift();
-      }
-    }
-
-    function randomIndex(length) {
-      if (!Number.isFinite(length) || length <= 1) return 0;
-      if (window.crypto && typeof window.crypto.getRandomValues === "function") {
-        var randomBuffer = new Uint32Array(1);
-        window.crypto.getRandomValues(randomBuffer);
-        return randomBuffer[0] % length;
-      }
-      return Math.floor(Math.random() * length);
-    }
-
-    function buildTraits(value) {
-      var normalized = value.replace(/\s+/g, " ").trim();
-      var tokens = normalized ? normalized.split(" ") : [];
-      var hasLatin = /[A-Za-z]/.test(value);
-      var hasCJK = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/.test(value);
-      var hasArabicScript = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(value);
-      var hasLatinDiacritics = /[À-ÖØ-öø-ÿĀ-žƏəİıŒœŞşĞğÇçÑñ]/.test(value);
-      var hasEmoji = /[\u{1F300}-\u{1FAFF}]/u.test(value);
-      var hasHyphen = /[-‐‑‒–—]/.test(value);
-      var hasApostrophe = /['’]/.test(value);
-      var hasMiddleDot = /[·•・]/.test(value);
-      var hasOtherPunctuation = /[.,/#!$%^&*;:{}=_`~"\\()[\]?<>@+]/.test(value);
-      var scriptCount = 0;
-      if (hasLatin || hasLatinDiacritics) scriptCount += 1;
-      if (hasCJK) scriptCount += 1;
-      if (hasArabicScript) scriptCount += 1;
-      return {
-        normalized: normalized,
-        tokenCount: tokens.length,
-        hasLatin: hasLatin,
-        hasCJK: hasCJK,
-        hasArabicScript: hasArabicScript,
-        hasLatinDiacritics: hasLatinDiacritics,
-        hasMiddleDot: hasMiddleDot,
-        hasSpaces: /\s/.test(value),
-        hasDigits: /\d/.test(value),
-        hasNonAscii: hasNonAscii(value),
-        hasHyphen: hasHyphen,
-        hasApostrophe: hasApostrophe,
-        hasEmoji: hasEmoji,
-        hasOtherPunctuation: hasOtherPunctuation,
-        hasMixedScripts: scriptCount > 1,
-        hasUnsupportedScript: hasNonAscii(value) && !hasCJK && !hasArabicScript && !(hasLatin || hasLatinDiacritics),
-        isLong: normalized.length >= 12,
-        isShort: value.length > 0 && value.length <= 3
-      };
-    }
-
-    function buildStructuredCandidates(pool, seed, count) {
-      var list = [];
-      var offset;
-      if (!pool) return list;
-      for (offset = 0; offset < count; offset += 1) {
-        var open = pool.opens[(seed + (offset * 3)) % pool.opens.length];
-        var core = pool.cores[(seed + (offset * 5) + 1) % pool.cores.length];
-        var tail = pool.tails[(seed + (offset * 7) + 2) % pool.tails.length];
-        var composed = open + " " + core + " " + tail;
-        if (composed.length > 84) continue;
-        pushUnique(list, composed);
-      }
-      return list;
-    }
-
-    function addPoolCandidates(candidates, key, seed, count) {
-      var next = buildStructuredCandidates(messagePools[key], seed, count);
-      next.forEach(function (item) {
-        pushUnique(candidates, item);
-      });
-    }
-
-    function buildCandidates(value) {
-      var seed = hashString(value + "|" + turn);
-      var traits = buildTraits(value);
-      var candidates = [];
-      var priority = [];
-
-      if (traits.hasMiddleDot) priority.push("middleDot");
-      if (traits.hasMixedScripts) {
-        priority.push("mixedScripts");
-      } else {
-        if (traits.hasArabicScript) priority.push("arabicScript");
-        if (traits.hasCJK && !traits.hasLatin) priority.push("cjkOnly");
-      }
-      if (traits.hasUnsupportedScript) priority.push("arabicScript");
-      if (traits.hasLatinDiacritics) priority.push("latinDiacritics");
-      if (traits.hasHyphen) priority.push("hyphen");
-      if (traits.hasApostrophe) priority.push("apostrophe");
-      if (traits.hasDigits) priority.push("digits");
-      if (traits.hasEmoji) priority.push("emoji");
-      if (traits.hasOtherPunctuation && !traits.hasMiddleDot && !traits.hasHyphen && !traits.hasApostrophe) {
-        priority.push("otherPunctuation");
-      }
-      if (traits.hasLatin && traits.tokenCount > 2) priority.push("multiPart");
-      if (traits.hasLatin && traits.tokenCount === 2 && !traits.hasMixedScripts) priority.push("twoPart");
-      if (traits.hasLatin && traits.tokenCount <= 1 && !traits.hasMixedScripts) priority.push("singleToken");
-      if (traits.isLong) priority.push("long");
-      if (traits.isShort) priority.push("short");
-      if (!priority.length) priority.push("genericDomestic");
-
-      priority.forEach(function (key, index) {
-        addPoolCandidates(candidates, key, (seed + (index * 17)) >>> 0, 12);
-      });
-
-      if (priority.indexOf("genericDomestic") === -1) {
-        addPoolCandidates(candidates, "genericDomestic", (seed + 211) >>> 0, 8);
-      }
-
-      if (!candidates.length) {
-        pushUnique(candidates, "Real-name check failed: this form still prefers a smaller naming world.");
-      }
-
-      return {
-        seed: seed,
-        list: candidates
-      };
-    }
-
-    function pickMessage(value) {
-      var cleaned = value.trim();
-      if (!cleaned) return initialMessage;
-
-      turn += 1;
-      var generated = buildCandidates(cleaned);
-      var candidates = generated.list;
-      var available = candidates.filter(function (candidate) {
-        return recentMessages.indexOf(candidate) === -1;
-      });
-      var pool = available.length ? available : candidates;
-
-      if (!pool.length) {
-        return initialMessage;
-      }
-
-      var choice = pool[randomIndex(pool.length)];
-      rememberMessage(choice);
-      return choice;
-    }
-
-    function renderMessage(nextText) {
-      message.textContent = nextText;
-    }
-
-    if (form) {
-      form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        renderMessage(pickMessage(input.value));
-      });
-      input.addEventListener("input", function () {
-        renderMessage(initialMessage);
-      });
-    } else {
-      input.addEventListener("input", function () {
-        renderMessage(pickMessage(input.value));
-      });
-      input.addEventListener("keydown", function (event) {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        renderMessage(pickMessage(input.value));
-      });
-      input.addEventListener("search", function () {
-        renderMessage(pickMessage(input.value));
-      });
-    }
-
-    return {
-      reset: function () {
-        input.value = "";
-        message.textContent = initialMessage;
-        recentMessages = [];
-      }
-    };
+    return window.PortfolioExclusion ? window.PortfolioExclusion.init(bubbleMotionApi) : null;
   }
 
   function initNamecardFlip() {
@@ -2438,412 +1568,6 @@
       card: card,
       updatePill: updatePill
     };
-  }
-
-  function initLandingModals() {
-    var root = document.documentElement;
-    var body = document.body;
-    var activeModalKey = "";
-    var activeTrigger = null;
-    var lockedScrollY = 0;
-    var modalByKey = {};
-
-    function lockScroll() {
-      if (root.classList.contains("landing-modal-open")) return;
-      lockedScrollY = window.scrollY || window.pageYOffset || 0;
-      root.classList.add("landing-modal-open");
-      body.style.position = "fixed";
-      body.style.left = "0";
-      body.style.right = "0";
-      body.style.top = -lockedScrollY + "px";
-      body.style.width = "100%";
-    }
-
-    function unlockScroll() {
-      if (!root.classList.contains("landing-modal-open")) return;
-      root.classList.remove("landing-modal-open");
-      body.style.position = "";
-      body.style.left = "";
-      body.style.right = "";
-      body.style.top = "";
-      body.style.width = "";
-      window.scrollTo(0, lockedScrollY);
-    }
-
-    function focusInitialTarget(modalKey) {
-      var modal = modalByKey[modalKey];
-      if (!modal) return;
-      var target = modal.querySelector("[data-modal-initial-focus]") ||
-        modal.querySelector(".landing3042-modal-close") ||
-        modal.querySelector("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
-      if (target && target.focus) {
-        target.focus({ preventScroll: true });
-      }
-    }
-
-    function closeModal(modalKey, options) {
-      var opts = options || {};
-      var key = modalKey || activeModalKey;
-      if (!key) return;
-      var modal = modalByKey[key];
-      if (!modal) return;
-
-      modal.classList.remove("is-open");
-      modal.setAttribute("aria-hidden", "true");
-      modal.hidden = true;
-
-      if (activeModalKey !== key) return;
-      activeModalKey = "";
-      unlockScroll();
-
-      if (opts.restoreFocus === false) return;
-      if (activeTrigger && typeof activeTrigger.focus === "function") {
-        activeTrigger.focus({ preventScroll: true });
-      }
-      activeTrigger = null;
-    }
-
-    function openModal(modalKey, triggerEl) {
-      var modal = modalByKey[modalKey];
-      if (!modal) return;
-      if (activeModalKey && activeModalKey !== modalKey) {
-        closeModal(activeModalKey, { restoreFocus: false });
-      }
-
-      activeModalKey = modalKey;
-      activeTrigger = triggerEl || document.activeElement;
-      modal.hidden = false;
-      modal.setAttribute("aria-hidden", "false");
-      modal.classList.add("is-open");
-      lockScroll();
-
-      window.requestAnimationFrame(function () {
-        focusInitialTarget(modalKey);
-      });
-    }
-
-    ["studio"].forEach(function (key) {
-      var modal = modalByKey[key];
-      if (!modal) return;
-
-      modal.addEventListener("click", function (event) {
-        if (event.target === modal) {
-          closeModal(key);
-        }
-      });
-
-      Array.prototype.forEach.call(
-        modal.querySelectorAll("[data-modal-close]"),
-        function (button) {
-          button.addEventListener("click", function () {
-            closeModal(key);
-          });
-        }
-      );
-    });
-
-    Array.prototype.forEach.call(
-      document.querySelectorAll("[data-trigger='studio']"),
-      function (trigger) {
-        trigger.addEventListener("click", function (event) {
-          var key = trigger.getAttribute("data-trigger");
-          if (!modalByKey[key]) return;
-          event.preventDefault();
-          openModal(key, trigger);
-        });
-      }
-    );
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key !== "Escape" || !activeModalKey) return;
-      if (root.classList.contains("project-inline-open")) return;
-      if (root.classList.contains("map-project-open")) return;
-      closeModal(activeModalKey);
-    });
-
-    return {
-      closeActive: function () {
-        closeModal(activeModalKey);
-      }
-    };
-  }
-
-  function initProjectInlineProjectView() {
-    var targets = Array.prototype.slice.call(
-      document.querySelectorAll(
-        "[data-studio-project-link][href*='overlay-'], [data-studio-project-more][href*='overlay-']"
-      )
-    );
-
-    var shell = document.getElementById("project-inline-shell");
-    var closeBtn = document.getElementById("project-inline-close");
-    var pages = Array.prototype.slice.call(
-      document.querySelectorAll(".project-inline-page[data-project-page]")
-    );
-    var preview = document.getElementById("project-hover-preview");
-    var previewImg = document.getElementById("project-hover-preview-img");
-    var previewByFile = {
-      "overlay-minimovesmatter.html":
-        "https://freight.cargo.site/w/400/q/75/i/P2109056708379344572925327284168/minimove.svg",
-      "overlay-sustainableWaves.html":
-        "./assets/p21.png",
-      "overlay-shanghaisummerschool.html":
-        "./assets/Frame-90.png"
-    };
-    var projectByFile = {
-      "overlay-minimovesmatter.html": "minimoves",
-      "overlay-sustainableWaves.html": "sustainable",
-      "overlay-shanghaisummerschool.html": "summerschool"
-    };
-    if (!shell || !closeBtn || !pages.length) return;
-
-    var pageByProject = {};
-    pages.forEach(function (page) {
-      var id = page.getAttribute("data-project-page");
-      if (!id) return;
-      pageByProject[id] = page;
-    });
-
-    var projectState = {
-      activeProject: null,
-      scrollY: 0
-    };
-    var sustainablePage = pageByProject.sustainable || null;
-    var sustainableScrollWindow = sustainablePage
-      ? sustainablePage.querySelector(".project-sustainable-scroll-window")
-      : null;
-    var sustainableLongImage = sustainablePage
-      ? sustainablePage.querySelector(".project-sustainable-scroll-figure img")
-      : null;
-
-    function clearSustainableInlineLayout() {
-      if (!sustainableScrollWindow) return;
-      sustainableScrollWindow.scrollTop = 0;
-    }
-
-    function syncSustainableLayout(options) {
-      if (!sustainablePage || !sustainableScrollWindow) return;
-      if (projectState.activeProject !== "sustainable") return;
-
-      if (options && options.resetScrollTop) {
-        sustainableScrollWindow.scrollTop = 0;
-      }
-    }
-
-    if (sustainableLongImage && !sustainableLongImage.complete) {
-      sustainableLongImage.addEventListener("load", function () {
-        syncSustainableLayout({ resetScrollTop: false });
-      });
-    }
-
-    function getOverlayFile(href) {
-      if (!href) return "";
-      try {
-        var parsed = new URL(href, window.location.href);
-        var path = parsed.pathname || "";
-        return path.split("/").pop() || "";
-      } catch (error) {
-        var clean = String(href).split("?")[0].split("#")[0];
-        return clean.split("/").pop() || "";
-      }
-    }
-
-    function getProjectFromFile(file) {
-      return projectByFile[file] || "";
-    }
-
-    function isValidProject(projectId) {
-      return !!pageByProject[projectId];
-    }
-
-    function parseProjectFromHash() {
-      var hash = window.location.hash || "";
-      if (!hash) return null;
-      var clean = hash.charAt(0) === "#" ? hash.slice(1) : hash;
-      if (!clean) return null;
-      var params = new URLSearchParams(clean);
-      var project = params.get("project");
-      if (!isValidProject(project)) return null;
-      return project;
-    }
-
-    function buildProjectHash(projectId) {
-      return "#project=" + encodeURIComponent(projectId);
-    }
-
-    function syncVisiblePage(projectId) {
-      var headerAlignWidthByProject = {
-        minimoves: "1214.813px",
-        sustainable: "1214.813px",
-        summerschool: "1214px"
-      };
-      pages.forEach(function (page) {
-        var isActive = page.getAttribute("data-project-page") === projectId;
-        page.hidden = !isActive;
-      });
-      if (projectId && headerAlignWidthByProject[projectId]) {
-        shell.style.setProperty("--project-inline-header-align-w-3042", headerAlignWidthByProject[projectId]);
-      } else {
-        shell.style.removeProperty("--project-inline-header-align-w-3042");
-      }
-    }
-
-    function setShellOpen(open) {
-      if (open) {
-        shell.hidden = false;
-        shell.setAttribute("aria-hidden", "false");
-      } else {
-        shell.setAttribute("aria-hidden", "true");
-        shell.hidden = true;
-      }
-    }
-
-    function hidePreview() {
-      if (!preview) return;
-      preview.classList.remove("is-visible");
-      preview.style.transform = "translate3d(-9999px, -9999px, 0)";
-    }
-
-    function placePreview(clientX, clientY) {
-      if (!preview) return;
-      var offset = 18;
-      var x = clientX + offset;
-      var y = clientY + offset;
-      var rect = preview.getBoundingClientRect();
-      var maxX = window.innerWidth - rect.width - 12;
-      var maxY = window.innerHeight - rect.height - 12;
-      if (x > maxX) x = clientX - rect.width - offset;
-      if (y > maxY) y = maxY;
-      if (x < 12) x = 12;
-      if (y < 12) y = 12;
-      preview.style.transform = "translate3d(" + Math.round(x) + "px, " + Math.round(y) + "px, 0)";
-    }
-
-    function openProject(projectId) {
-      if (!isValidProject(projectId)) return;
-      hidePreview();
-      if (!projectState.activeProject) {
-        projectState.scrollY = window.scrollY || window.pageYOffset || 0;
-      }
-      projectState.activeProject = projectId;
-      setShellOpen(true);
-      syncVisiblePage(projectId);
-      shell.scrollTop = 0;
-      document.documentElement.classList.add("project-inline-open");
-      if (projectId === "sustainable") {
-        if (sustainableScrollWindow) {
-          sustainableScrollWindow.scrollTop = 0;
-        }
-        window.requestAnimationFrame(function () {
-          syncSustainableLayout({ resetScrollTop: true });
-          window.requestAnimationFrame(function () {
-            syncSustainableLayout({ resetScrollTop: true });
-          });
-        });
-      }
-    }
-
-    function closeProject() {
-      if (!projectState.activeProject) return;
-      projectState.activeProject = null;
-      document.documentElement.classList.remove("project-inline-open");
-      syncVisiblePage(null);
-      setShellOpen(false);
-      clearSustainableInlineLayout();
-      var restoreY = projectState.scrollY;
-      projectState.scrollY = 0;
-      window.requestAnimationFrame(function () {
-        window.scrollTo(0, restoreY);
-      });
-    }
-
-    function renderByHash() {
-      var projectId = parseProjectFromHash();
-      if (projectId) {
-        openProject(projectId);
-      } else {
-        closeProject();
-      }
-    }
-
-    function clearProjectHash() {
-      var cleanUrl = window.location.pathname + window.location.search;
-      window.history.replaceState(null, "", cleanUrl);
-    }
-
-    function writeStudioHash() {
-      if ((window.location.hash || "").toLowerCase() === "#studio") return;
-      window.location.hash = "studio";
-    }
-
-    function closeFromUi() {
-      if (!projectState.activeProject) return;
-      if (parseProjectFromHash()) {
-        writeStudioHash();
-        return;
-      }
-      clearProjectHash();
-      renderByHash();
-    }
-
-    closeBtn.addEventListener("click", closeFromUi);
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && projectState.activeProject) {
-        closeFromUi();
-      }
-    });
-    window.addEventListener("hashchange", renderByHash);
-    window.addEventListener("popstate", renderByHash);
-    window.addEventListener("resize", function () {
-      syncSustainableLayout({ resetScrollTop: false });
-    });
-
-    var canHoverPreview =
-      !!preview &&
-      !!previewImg &&
-      window.matchMedia &&
-      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-    targets.forEach(function (link) {
-      link.addEventListener("click", function (event) {
-        if (event.defaultPrevented) return;
-        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        var file = getOverlayFile(link.getAttribute("href"));
-        var projectId = getProjectFromFile(file);
-        if (!projectId) return;
-        event.preventDefault();
-        hidePreview();
-        var nextHash = buildProjectHash(projectId);
-        if (window.location.hash === nextHash) {
-          openProject(projectId);
-        } else {
-          window.location.hash = nextHash;
-        }
-      });
-
-      if (!canHoverPreview) return;
-
-      link.addEventListener("pointerenter", function (event) {
-        if (document.documentElement.classList.contains("project-inline-open")) return;
-        if (document.documentElement.classList.contains("landing-modal-open")) return;
-        var file = getOverlayFile(link.getAttribute("href"));
-        var previewSrc = previewByFile[file];
-        if (!previewSrc) return;
-        previewImg.src = previewSrc;
-        preview.classList.add("is-visible");
-        placePreview(event.clientX, event.clientY);
-      });
-
-      link.addEventListener("pointermove", function (event) {
-        if (!preview.classList.contains("is-visible")) return;
-        placePreview(event.clientX, event.clientY);
-      });
-
-      link.addEventListener("pointerleave", hidePreview);
-      link.addEventListener("blur", hidePreview);
-    });
-
-    renderByHash();
   }
 
   function initMapCenterHoverPreview() {
@@ -3047,7 +1771,9 @@
         ]
       }
     };
+    previewConfigByNodeId.norrtag = window.NorrtagMapPreview;
     var captionByNodeId = {
+      norrtag: {title: window.NorrtagContent.title, desc: window.NorrtagContent.description},
       "3150:21733": {
         title: "MakkaPakka",
         desc: "An inclusive hide-and-seek game designed in response to playground exclusion in integrated education settings."
@@ -3100,6 +1826,7 @@
       }
     };
     var MAP_PROJECT_ENABLED_NODE_IDS = [
+      "norrtag",
       VERITAS_NODE_ID,
       MAKKAPAKKA_NODE_ID,
       "3150:21734",
@@ -3114,11 +1841,11 @@
       ENABLED_MAP_PROJECT_DETAIL_NODE_IDS[nodeId] = true;
     });
 
+    var mapProjectNorrtagRoot = document.getElementById("map-project-norrtag-root");
     var MAP_PROJECT_LAYOUT_VERITAS = "veritas";
     var MAP_PROJECT_LAYOUT_TEMPLATE_MAKAPAKKA = "template_makapakka";
     var MAP_PROJECT_LAYOUT_OPENTRACE = "opentrace";
-    var MAP_PROJECT_TEMPLATE_SECONDARY_STATEMENT =
-      "I'm still developing this page, but you can check out the projects through my old portfolio pics ⇊";
+    var MAP_PROJECT_TEMPLATE_SECONDARY_STATEMENT = "";
     var MAP_PROJECT_TEMPLATE_DEFAULT_TAGS = [
       "#Inclusive game",
       "#Disability interaction (DIX)"
@@ -3141,6 +1868,20 @@
     var MAP_PROJECT_OPENTRACE_SEQUENCE_TRIGGER_TOP_TOLERANCE = 24;
 
     function buildTemplateGalleryCards(projectTitle, imageIndexes) {
+      var topics = {
+        1: "MakkaPakka — Inclusive Play", 2: "Research & Motivation",
+        3: "Empathy & Game Mechanics", 4: "Prototype & Function Test",
+        5: "Realization & Alpha Test", 6: "Play Scenario & Reflection",
+        7: "Eco-Mailbox — Community Regeneration", 8: "Field Research & System Overview",
+        9: "Residents, Behaviours & Problem Mapping", 10: "Design Process & Service Prototype",
+        11: "Community Intervention", 12: "Project Review & Scenario",
+        13: "Community Mapping & Co-design", 14: "Implementation & Reflection",
+        15: "Slice Wardrobe — Sustainable Fashion", 16: "Fashion Systems & Challenges",
+        17: "Capsule Wardrobe & Concept Exploration", 18: "System Map & Collaboration",
+        19: "Interactive Prototype & Realization", 20: "Exhibition Scenario & Project Review",
+        21: "Social Innovation Festival & Exhibition", 22: "Digital Experience & Public Engagement",
+        25: "Background & Journey Map", 26: "App Flow & Encounter Scenarios"
+      };
       var cards = [];
       var safeIndexes = Array.isArray(imageIndexes) ? imageIndexes : [];
       for (var i = 0; i < safeIndexes.length; i += 1) {
@@ -3151,6 +1892,9 @@
           displaySrc: "./assets/portfolio-gallery/" + String(imageIndex) + "-display.webp",
           viewerSrc: "./assets/portfolio-gallery/" + String(imageIndex) + "-viewer.webp",
           detailSrc: "./assets/portfolio-gallery/" + String(imageIndex) + "-detail.webp",
+          width: 2560,
+          height: 906,
+          topic: topics[imageIndex] || projectTitle,
           alt: (projectTitle || "Project") + " old portfolio image " + String(i + 1)
         });
       }
@@ -3211,6 +1955,7 @@
         headingA: "",
         headingB: "",
         galleryCards: galleryCards,
+        imageReader: safe.imageReader === true && galleryCards.length > 0,
         featureVideoSrc: safe.featureVideoSrc ? String(safe.featureVideoSrc) : "",
         featureVideoPosterSrc: safe.featureVideoPosterSrc ? String(safe.featureVideoPosterSrc) : "",
         featureVideoAlt: safe.featureVideoAlt ? String(safe.featureVideoAlt) : ""
@@ -3335,11 +2080,13 @@
       },
       "3150:21733": createTemplateMapProjectPageData({
         pageTitle: "MakkaPakka - a game for my blind friends",
+        imageReader: true,
         lead: "MakkaPakka is an inclusive hide-and-seek game system designed for blind and sighted children to play together in integrated education settings. Developed in response to playground exclusion observed in school environments, the project explores how accessible interaction can support not only usability, but also shared participation and peer connection. Rather than creating a separate assistive toy, it rethinks play itself as a space for inclusion.",
         galleryCards: buildTemplateGalleryCards("MakkaPakka", buildTemplateGalleryRange(1, 6))
       }),
       "3150:21734": createTemplateMapProjectPageData({
         pageTitle: "Eco-Mailbox",
+        imageReader: true,
         lead: "Eco-Mailbox is a participatory community project that reimagines abandoned mailboxes as shared supports for neighbourhood interaction. Grounded in ethnographic research and community-led regeneration, the project began by looking closely at how local relationships, routines, and underused infrastructures shape everyday social life. It proposes a small but meaningful intervention that turns overlooked urban material into a support structure for collective use and interaction.",
         tags: [
           "#ParticipatoryDesign",
@@ -3352,6 +2099,7 @@
       }),
       "3139:17651": createTemplateMapProjectPageData({
         pageTitle: "Woodpecker Project",
+        imageReader: true,
         lead: "Woodpecker Project is a community co-design renovation project that translates residents' stories and everyday needs into small public-space interventions. Developed through participatory workshops and local engagement, it explores how design can work with existing communities rather than imposing solutions from outside. The project treats spatial change as something negotiated collectively, through process as much as through outcome.",
         tags: [
           "#CommunityCoDesign",
@@ -3364,6 +2112,7 @@
       }),
       "3139:21712": createTemplateMapProjectPageData({
         pageTitle: "Slice Wardrobe",
+        imageReader: true,
         lead: "Slice Wardrobe is an interactive wardrobe system that encourages more intentional clothing use through exhibition and service design. Starting from the problem of overconsumption in everyday fashion practices, the project explores how interaction can support reflection, selection, and reuse rather than constant acquisition. It shifts sustainability from an abstract value into something people can experience through concrete choices and routines.",
         tags: [
           "#SustainableFashion",
@@ -3376,6 +2125,7 @@
       }),
       "3139:21711": createTemplateMapProjectPageData({
         pageTitle: "Bottle U 4th",
+        imageReader: true,
         lead: "Bottle U 4th is a social innovation festival project combining event design, exhibition strategy, and digital touchpoints for public participation. Developed in a large public-facing context, the project explores how different forms of interaction can support engagement across visitors, organisers, and partner groups. Rather than treating the festival as a single event, it approaches it as a temporary participation system shaped through multiple designed encounters.",
         tags: [
           "#SocialInnovationFestival",
@@ -3388,6 +2138,7 @@
       }),
       "3139:21710": createTemplateMapProjectPageData({
         pageTitle: "Loom Drift",
+        imageReader: true,
         lead: "Loom Drift is a social app concept designed around chance encounters and the places where people's paths briefly cross. Informed by questions of urban disconnection and the experience of migration, the project explores how digital interaction might help people notice, revisit, and reinterpret fleeting moments of connection in the city. It frames social technology less as a tool for constant communication, and more as a way of making meaning around encounter.",
         tags: [
           "#ChanceEncounter",
@@ -3568,6 +2319,7 @@
     var mapProjectViewportRecoveryTimeout = 0;
     var PRACTICE_TAG_PROJECT_NAMES = {};
     PRACTICE_TAG_PROJECT_NAMES[PRACTICE_TAG_FILTER_SOCIAL] = [
+      "Everyone's on Board",
       "CIY",
       "PaperMind",
       "MakkaPakka",
@@ -3578,9 +2330,9 @@
       "BottleU"
     ];
     PRACTICE_TAG_PROJECT_NAMES[PRACTICE_TAG_FILTER_INTERACTION] = [
+      "Everyone's on Board",
       "Veritas",
       "SliceWardrobe",
-      "BottleU",
       "Flexit",
       "LoomDrift",
       "PaperMind",
@@ -3588,6 +2340,7 @@
       "OpenTraces"
     ];
     PRACTICE_TAG_PROJECT_NAMES[PRACTICE_TAG_FILTER_PSSD] = [
+      "Everyone's on Board",
       "SliceWardrobe",
       "Eco-Mailbox",
       "CIY",
@@ -3597,20 +2350,22 @@
     ];
     var PRACTICE_PRIORITY_RANK_BY_SCOPE = {};
     PRACTICE_PRIORITY_RANK_BY_SCOPE[PRACTICE_PRIORITY_SCOPE_DEFAULT] = {
+      "norrtag": 1,
       "3150:21735": 1, // OpenTrace
       "3139:21709": 1, // Veritas
       "3150:21733": 1, // MakkaPakka
       "3139:21713": 2, // PaperMind
       "3150:21734": 1, // Eco-Mailbox
       "3139:17651": 2, // Woodpecker
-      "3139:21711": 2, // BottleU
+      "3139:21711": 3, // BottleU
       "3139:21712": 3, // SliceWardrobe
-      "3139:21710": 3, // LoomDrift
+      "3139:21710": 2, // LoomDrift
       "3150:21732": 4, // CIY
       "3139:21719": 4, // Flexit
       "3139:21718": 4 // EasyFlow
     };
     PRACTICE_PRIORITY_RANK_BY_SCOPE[PRACTICE_TAG_FILTER_SOCIAL] = {
+      "norrtag": 2,
       "3150:21732": 4, // CIY
       "3139:21713": 3, // PaperMind
       "3150:21733": 2, // MakkaPakka
@@ -3621,21 +2376,22 @@
       "3139:21711": 2 // BottleU
     };
     PRACTICE_PRIORITY_RANK_BY_SCOPE[PRACTICE_TAG_FILTER_INTERACTION] = {
+      "norrtag": 1,
       "3139:21709": 1, // Veritas
-      "3139:21712": 4, // SliceWardrobe
+      "3139:21712": 3, // SliceWardrobe
       "3139:21719": 4, // Flexit
-      "3139:21710": 4, // LoomDrift
+      "3139:21710": 2, // LoomDrift
       "3139:21713": 2, // PaperMind
       "3150:21733": 2, // MakkaPakka
-      "3150:21735": 1, // OpenTrace
-      "3139:21711": 3 // BottleU
+      "3150:21735": 1 // OpenTrace
     };
     PRACTICE_PRIORITY_RANK_BY_SCOPE[PRACTICE_TAG_FILTER_PSSD] = {
+      "norrtag": 1,
       "3139:21712": 2, // SliceWardrobe
       "3150:21734": 1, // Eco-Mailbox
       "3150:21732": 4, // CIY
       "3139:21710": 1, // LoomDrift
-      "3150:21735": 1, // OpenTrace
+      "3150:21735": 2, // OpenTrace
       "3139:21711": 3 // BottleU
     };
     // Per-project hover preview scale multipliers (1 = original size).
@@ -3677,6 +2433,7 @@
     var slideVideoRatioBySrc = new Map();
     var pendingSlideshowVideoMetadataHandler = null;
     var detailByNodeId = captionByNodeId;
+    mapProjectPageDataByNodeId.norrtag = {layoutType: "norrtag", pageTitle: window.NorrtagComposition.title};
     var practiceOnboardingDismissed = !didPageLoadFromReload() && safeReadLocalStorage(PRACTICE_ONBOARDING_STORAGE_KEY) === "1";
     var practiceOnboardingCard = null;
     var practiceOnboardingLinePrimary = null;
@@ -4172,7 +2929,21 @@
     if (previewSlideshowImgB) slideshowLayers.push(previewSlideshowImgB);
     if (!slideshowLayers.length && previewSlideshowImgLegacy) slideshowLayers.push(previewSlideshowImgLegacy);
 
+    // Strip media sources before inserting measurement/preview copies. A hidden
+    // metadata video can download the entire MOV when its index is at the end.
+    function deferOpenTracesVideo(root) {
+      var video = root.querySelector("video");
+      if (!video) return;
+      video.autoplay = false;
+      video.removeAttribute("autoplay");
+      video.preload = "none";
+      video.querySelectorAll("source[src]").forEach(function (source) {
+        source.dataset.previewSrc = source.getAttribute("src");
+        source.removeAttribute("src");
+      });
+    }
     var mirrorOpenTraces = sourceOpenTracesNode.cloneNode(true);
+    deferOpenTracesVideo(mirrorOpenTraces);
     mirrorOpenTraces.classList.add("map-center-open-traces-mirror");
     previewOpenTracesHost.appendChild(mirrorOpenTraces);
 
@@ -4188,6 +2959,7 @@
     measureHost.style.width = "1024px";
 
     var measureOpenTraces = sourceOpenTracesNode.cloneNode(true);
+    deferOpenTracesVideo(measureOpenTraces);
     measureOpenTraces.classList.add("map-center-open-traces-measure");
     measureHost.appendChild(measureOpenTraces);
     document.body.appendChild(measureHost);
@@ -4202,16 +2974,6 @@
       measureVideo.autoplay = false;
       measureVideo.removeAttribute("autoplay");
       measureVideo.pause();
-    }
-
-    var mirrorImages = Array.prototype.slice.call(mirrorOpenTraces.querySelectorAll("img"));
-    mirrorImages.forEach(function (img) {
-      if (typeof img.decode === "function") {
-        img.decode().catch(function () {});
-      }
-    });
-    if (mirrorVideo) {
-      mirrorVideo.load();
     }
 
     function getPixelLineHeight(el) {
@@ -4331,8 +3093,8 @@
         return { type: "image", src: entry };
       }
       if (typeof entry === "object" && entry.src) {
-        var type = entry.type === "video" ? "video" : "image";
-        return { type: type, src: String(entry.src) };
+        var type = entry.type === "composition" ? "composition" : entry.type === "video" ? "video" : "image";
+        return { type: type, src: String(entry.src), composition: entry.composition };
       }
       return null;
     }
@@ -4562,6 +3324,7 @@
       indices.forEach(function (index) {
         var entry = getSlideEntry(config, index);
         if (!entry || !entry.src) return;
+        if (entry.type === "composition") return;
         if (entry.type === "video") {
           preloadVideoSource(entry.src).catch(function () {});
           return;
@@ -4570,7 +3333,10 @@
       });
     }
 
+    var didPreloadConfiguredSlides = false;
     function preloadConfiguredSlides() {
+      if (didPreloadConfiguredSlides || hasMapProjectHash()) return;
+      didPreloadConfiguredSlides = true;
       Object.keys(previewConfigByNodeId).forEach(function (nodeId) {
         var config = previewConfigByNodeId[nodeId];
         if (!config || config.mode !== "slideshow" || !config.slides || !config.slides.length) return;
@@ -4585,6 +3351,7 @@
           config.slides.forEach(function (entry) {
             var normalizedEntry = normalizeSlideEntry(entry);
             if (!normalizedEntry || !normalizedEntry.src) return;
+            if (normalizedEntry.type === "composition") return;
             if (normalizedEntry.type === "video") {
               preloadVideoSource(normalizedEntry.src).catch(function () {});
               return;
@@ -4624,7 +3391,28 @@
       return getSlideshowIntervalMs();
     }
 
+    var previewComposition = document.createElement("div");
+    previewComposition.className = "norrtag-preview-composition";
+    previewComposition.hidden = true;
+    previewSlideshow.appendChild(previewComposition);
+    function clearPreviewComposition() {
+      if (previewComposition.slideshowCleanup) {
+        previewComposition.slideshowCleanup();
+        previewComposition.slideshowCleanup = null;
+      }
+      window.NorrtagPage.clear(previewComposition);
+    }
+    function showPreviewComposition(entry) {
+      slideshowLayers.forEach(function (layer) { setLayerVisible(layer, false); });
+      if (previewSlideshowVideo) {
+        previewSlideshowVideo.pause();
+        previewSlideshowVideo.onended = null;
+      }
+      setSlideshowVideoVisible(false);
+      window.NorrtagPage.renderPreview(previewComposition, entry.composition);
+    }
     function stopSlideshow() {
+      clearPreviewComposition();
       hideMapCenterSlideshowPagination();
       if (slideshowTimerId) {
         window.clearTimeout(slideshowTimerId);
@@ -4687,6 +3475,7 @@
     }
 
     function showSlideshowVideo(src, config, runToken) {
+      clearPreviewComposition();
       if (!previewSlideshowVideo || !src) return false;
       slideshowLayers.forEach(function (layer) {
         setLayerVisible(layer, false);
@@ -4749,6 +3538,7 @@
     }
 
     function showSlideshowImage(src, config) {
+      clearPreviewComposition();
       if (!src || !slideshowLayers.length) return false;
       if (previewSlideshowVideo) {
         previewSlideshowVideo.pause();
@@ -4802,7 +3592,9 @@
       var nextEntry = getSlideEntry(config, nextIndex);
       if (!nextEntry || !nextEntry.src) return;
 
-      if (nextEntry.type === "video") {
+      if (nextEntry.type === "composition") {
+        showPreviewComposition(nextEntry);
+      } else if (nextEntry.type === "video") {
         showSlideshowVideo(nextEntry.src, config, runToken);
       } else {
         if (!showSlideshowImage(nextEntry.src, config)) return;
@@ -4844,7 +3636,7 @@
       function proceedToNext() {
         if (runToken !== slideshowRunToken) return;
         if (activeMode !== "slideshow" || activeConfig !== config || preview.hidden) return;
-        var preloadPromise = nextEntry.type === "video"
+        var preloadPromise = nextEntry.type === "composition" ? Promise.resolve() : nextEntry.type === "video"
           ? preloadVideoSource(nextEntry.src)
           : preloadSlideSource(nextEntry.src);
         preloadPromise.finally(function () {
@@ -4854,6 +3646,45 @@
           if (nextEntry.type === "video") return;
           scheduleNextSlide(config);
         });
+      }
+
+      var compositionVideos = currentEntry && currentEntry.type === "composition"
+        ? Array.prototype.slice.call(previewComposition.querySelectorAll("video")) : [];
+      if (compositionVideos.length) {
+        // A live composition advances when its longest video finishes, including buffering time.
+        var controller = new AbortController();
+        previewComposition.slideshowCleanup = function () {
+          controller.abort();
+          stopMapCenterSlideshowProgress();
+        };
+        Promise.all(compositionVideos.map(function (video) {
+          return new Promise(function (resolve) {
+            if (video.readyState >= 1 || video.error) { resolve(); return; }
+            video.addEventListener("loadedmetadata", resolve, { once: true, signal: controller.signal });
+            video.addEventListener("error", resolve, { once: true, signal: controller.signal });
+            controller.signal.addEventListener("abort", resolve, { once: true });
+          });
+        })).then(function () {
+          if (controller.signal.aborted || runToken !== slideshowRunToken || preview.hidden || activeConfig !== config) return;
+          var longest = compositionVideos.filter(function (video) {
+            return isFinite(video.duration) && video.duration > 0 && !video.error;
+          }).sort(function (a, b) { return b.duration - a.duration; })[0];
+          if (!longest) {
+            startMapCenterTimedSlideshowProgress(config, currentIndex, waitMs);
+            slideshowTimerId = window.setTimeout(proceedToNext, waitMs);
+            return;
+          }
+          longest.loop = false;
+          longest.addEventListener("ended", proceedToNext, { once: true, signal: controller.signal });
+          stopMapCenterSlideshowProgress();
+          function tickCompositionProgress() {
+            if (controller.signal.aborted || runToken !== slideshowRunToken || preview.hidden) return;
+            setMapCenterSlideshowProgress(longest.currentTime / longest.duration);
+            slideshowProgressRaf = window.requestAnimationFrame(tickCompositionProgress);
+          }
+          tickCompositionProgress();
+        });
+        return;
       }
 
       if (waitMs === 0) {
@@ -4898,6 +3729,7 @@
       if (!config || !config.slides || !config.slides.length) return null;
       var src = getCurrentSlideSrc(config);
       var type = getCurrentSlideType(config);
+      if (type === "composition") return Number(config.fixedPreviewRatio) || null;
       if (type === "video") {
         var storedVideo = getStoredVideoRatio(src);
         if (storedVideo) return storedVideo;
@@ -4956,7 +3788,20 @@
       return true;
     }
 
-    preloadConfiguredSlides();
+    // Warm desktop previews only when the work map is approaching the viewport.
+    // Touch users open details directly, so hover preloads provide no benefit.
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      if ("IntersectionObserver" in window && practiceSection) {
+        var previewWarmObserver = new IntersectionObserver(function (entries) {
+          if (!entries.some(function (entry) { return entry.isIntersecting; }) || hasMapProjectHash()) return;
+          preloadConfiguredSlides();
+          previewWarmObserver.disconnect();
+        }, { rootMargin: "300px" });
+        previewWarmObserver.observe(practiceSection);
+      } else if (!hasMapProjectHash()) {
+        preloadConfiguredSlides();
+      }
+    }
     mobileDebugState.activeProfile = resolvePracticeMobileProfile(getActivePracticeMobileProfile());
     var savedPracticeMobilePositions = loadPracticeMobilePositionsFromStorage(mobileDebugState.activeProfile);
     if (savedPracticeMobilePositions) {
@@ -5027,6 +3872,7 @@
     }
 
     function setMode(mode, config) {
+      preview.dataset.mediaProject = config === window.NorrtagMapPreview ? "norrtag" : "";
       preview.classList.remove(
         "map-center-hover-preview--open-traces",
         "map-center-hover-preview--slideshow",
@@ -5204,8 +4050,7 @@
 
     function setMapProjectShellOpen(open) {
       if (open) {
-        mapProjectShell.hidden = false;
-        mapProjectShell.setAttribute("aria-hidden", "false");
+        revealPortfolioSurface(mapProjectShell, true);
       } else {
         mapProjectShell.hidden = true;
         mapProjectShell.setAttribute("aria-hidden", "true");
@@ -5214,8 +4059,7 @@
 
     function setMapProjectNavOpen(open) {
       if (open) {
-        mapProjectNav.hidden = false;
-        mapProjectNav.setAttribute("aria-hidden", "false");
+        revealPortfolioSurface(mapProjectNav, true);
       } else {
         mapProjectNav.hidden = true;
         mapProjectNav.setAttribute("aria-hidden", "true");
@@ -5967,8 +4811,11 @@
       }
 
       practiceGridEntries.forEach(function (entry) {
-        var scaledCol = PRACTICE_CENTER_COL + Math.round((entry.baseCol - PRACTICE_CENTER_COL) * scaleX);
-        var scaledRow = PRACTICE_CENTER_ROW + Math.round((entry.baseRow - PRACTICE_CENTER_ROW) * scaleY);
+        // Figma 58:1858 supplies relative positions; keep the established grid cells/camera.
+        var designCol = readItemCoordWithFallback(entry.item, ["--work-col"]);
+        var designRow = readItemCoordWithFallback(entry.item, ["--work-row"]);
+        var scaledCol = startCol + Math.round(designCol * viewportW / 1512);
+        var scaledRow = startRow + Math.round(designRow * viewportH / 671.805);
         if (!force && entry.scaledCol === scaledCol && entry.scaledRow === scaledRow) return;
         entry.scaledCol = scaledCol;
         entry.scaledRow = scaledRow;
@@ -6112,7 +4959,7 @@
     function setMapProjectContentTranslate(px, animated) {
       if (!mapProjectContent) return;
       if (animated) {
-        mapProjectContent.style.transition = "transform 170ms ease";
+        mapProjectContent.style.transition = portfolioMotionPreference.matches ? "none" : "transform 170ms cubic-bezier(.2,.8,.2,1)";
       } else {
         mapProjectContent.style.transition = "none";
       }
@@ -6130,7 +4977,7 @@
 
     function playPendingMapProjectEntryAnimation() {
       var shift = Number(mapDetailNavState.pendingEntryShift);
-      if (!isFinite(shift) || shift === 0) {
+      if (!isFinite(shift) || shift === 0 || portfolioMotionPreference.matches) {
         mapDetailNavState.pendingEntryShift = 0;
         return;
       }
@@ -6948,6 +5795,10 @@
     }
 
     function clearMapProjectTemplateRoot() {
+      if (mapProjectTemplateRoot && mapProjectTemplateRoot.readerCleanup) {
+        mapProjectTemplateRoot.readerCleanup();
+        mapProjectTemplateRoot.readerCleanup = null;
+      }
       resetMapProjectTemplateGalleryLazyLoader();
       if (!mapProjectTemplateRoot) return;
       mapProjectTemplateRoot.innerHTML = "";
@@ -6957,6 +5808,7 @@
 
     function renderMapProjectTemplateRoot(pageData, detail) {
       if (!mapProjectTemplateRoot) return;
+      clearMapProjectTemplateRoot();
       var tags = Array.isArray(pageData && pageData.tags) ? pageData.tags.slice(0, 3) : [];
       var lead = pageData && pageData.lead
         ? String(pageData.lead)
@@ -7029,9 +5881,9 @@
         "</div>",
         "</div>",
         '<p class="map-project-template-lead">' + escapeMapProjectDetailHtml(lead) + "</p>",
-        '<p class="map-project-template-secondary">' + escapeMapProjectDetailHtml(secondary) + "</p>",
+        secondary ? '<p class="map-project-template-secondary">' + escapeMapProjectDetailHtml(secondary) + "</p>" : "",
         featureVideoHtml,
-        cardsHtml ? '<div class="map-project-template-gallery">' + cardsHtml + "</div>" : "",
+        pageData.imageReader ? '<section class="portfolio-reader"></section>' : (cardsHtml ? '<div class="map-project-template-gallery">' + cardsHtml + "</div>" : ""),
         "</div>"
       ].join("");
 
@@ -7061,10 +5913,16 @@
           }
         );
       }
-      initMapProjectTemplateGalleryLazyLoader();
-
       mapProjectTemplateRoot.hidden = false;
       mapProjectTemplateRoot.setAttribute("aria-hidden", "false");
+      if (pageData.imageReader) {
+        mapProjectTemplateRoot.readerCleanup = window.PortfolioReader.mount(
+          mapProjectTemplateRoot.querySelector(".portfolio-reader"), cards,
+          { title: pageData.pageTitle, scrollport: mapProjectScroll, loadImage: queueMapProjectTemplateGalleryImageLoad }
+        );
+      } else {
+        initMapProjectTemplateGalleryLazyLoader();
+      }
     }
 
     function resetMapProjectTemplateGalleryLazyLoader() {
@@ -7726,6 +6584,8 @@
         window.cancelAnimationFrame(mapProjectDetailChromeThemeRaf);
         mapProjectDetailChromeThemeRaf = 0;
       }
+      mapProjectDetailTopbar.classList.remove("is-on-norrtag-blue");
+      mapProjectNav.classList.remove("is-on-norrtag-blue");
       mapProjectDetailTopbar.classList.remove("is-on-dark");
       mapProjectDetailTopbar.classList.remove("is-on-muted");
       mapProjectNav.classList.remove("is-on-dark");
@@ -7741,6 +6601,16 @@
     }
 
     function getMapProjectChromeToneAtViewportY(viewportY) {
+      if (!mapProjectNorrtagRoot.hidden) {
+        var fields = mapProjectNorrtagRoot.querySelectorAll("[data-chrome-tone]");
+        for (var n = 0; n < fields.length; n += 1) {
+          var bounds = fields[n].getBoundingClientRect();
+          var fieldStyle = window.getComputedStyle(fields[n], "::before");
+          var fieldTop = parseFloat(fieldStyle.top) || 0;
+          var fieldBottom = parseFloat(fieldStyle.bottom) || 0;
+          if (viewportY >= bounds.top + fieldTop && viewportY <= bounds.bottom - fieldBottom) return fields[n].dataset.chromeTone;
+        }
+      }
       if (mapProjectShell.classList.contains("map-project-shell--veritas")) {
         var darkSections = [mapProjectDetailSectionA, mapProjectDetailSectionC];
         for (var i = 0; i < darkSections.length; i += 1) {
@@ -7768,7 +6638,8 @@
 
     function applyMapProjectChromeTone(el, tone) {
       if (!el) return;
-      el.classList.toggle("is-on-dark", tone === "dark");
+      el.classList.toggle("is-on-dark", tone === "dark" || tone === "norrtag-blue");
+      el.classList.toggle("is-on-norrtag-blue", tone === "norrtag-blue");
       el.classList.toggle("is-on-muted", tone === "muted");
     }
 
@@ -8985,7 +7856,10 @@
       var scrollTop = getMapProjectDetailActiveScrollTop();
 
       var progress = Math.max(0, Math.min(1, scrollTop / collapseDistance));
-      mapProjectContent.style.setProperty("--map-project-detail-header-collapse-progress", progress.toFixed(4));
+      var nextProgress = progress.toFixed(4);
+      if (mapProjectContent.style.getPropertyValue("--map-project-detail-header-collapse-progress") !== nextProgress) {
+        mapProjectContent.style.setProperty("--map-project-detail-header-collapse-progress", nextProgress);
+      }
       scheduleSyncMapProjectDetailHeaderWrapState();
     }
 
@@ -9183,6 +8057,7 @@
         } catch (error) {}
       }
 
+      Array.prototype.forEach.call(mapProjectNorrtagRoot.querySelectorAll("video"), stopVideoEl);
       stopVideoEl(mapProjectDetailVisualLeft);
       if (mapProjectTemplateRoot) {
         Array.prototype.forEach.call(mapProjectTemplateRoot.querySelectorAll("video"), stopVideoEl);
@@ -9323,6 +8198,9 @@
     function renderMapProjectDetailPage(nodeId, detail, resolvedPageData) {
       var pageData = resolvedPageData || resolveMapProjectPageData(nodeId, detail);
       var layoutType = pageData && pageData.layoutType ? String(pageData.layoutType) : MAP_PROJECT_LAYOUT_TEMPLATE_MAKAPAKKA;
+      var isNorrtagLayout = layoutType === "norrtag";
+      mapProjectShell.classList.toggle("map-project-shell--norrtag", isNorrtagLayout);
+      window.NorrtagPage.clear(mapProjectNorrtagRoot);
       var isVeritasLayout = layoutType === MAP_PROJECT_LAYOUT_VERITAS;
       var isTemplateMakapakkaLayout = layoutType === MAP_PROJECT_LAYOUT_TEMPLATE_MAKAPAKKA;
       var isOpenTraceLayout = layoutType === MAP_PROJECT_LAYOUT_OPENTRACE;
@@ -9337,7 +8215,16 @@
         pageData.titleBadgeHref || "",
         pageData.titleBadgeAlt || ""
       );
-      if (isVeritasLayout) {
+      if (isNorrtagLayout) {
+        setMapProjectVeritasRootVisible(false);
+        clearMapProjectVeritasLayoutContent();
+        clearMapProjectTemplateRoot();
+        clearMapProjectOpenTraceRoot();
+        clearMapProjectDetailDesktopMediaSpacing();
+        window.NorrtagPage.render(mapProjectNorrtagRoot, function (src, alt, original) {
+          openMapProjectTemplateImageViewer(src, alt, original, original);
+        });
+      } else if (isVeritasLayout) {
         renderVeritasMapProjectLayout(pageData, detail);
       } else if (isOpenTraceLayout) {
         renderOpenTraceLayout(pageData, detail);
@@ -9351,6 +8238,8 @@
     }
 
     function clearMapProjectDetailPage() {
+      window.NorrtagPage.clear(mapProjectNorrtagRoot);
+      mapProjectShell.classList.remove("map-project-shell--norrtag");
       clearMapProjectViewportRecoveryTasks();
       clearMapProjectDetailDesktopMediaSpacing();
       clearMapProjectDetailHeaderCollapseState();
@@ -9382,11 +8271,13 @@
       clearMapProjectOpenTraceRoot();
     }
 
+    var mapProjectClosing = false;
     function openMapProject(nodeId) {
       if (!nodeId || !detailByNodeId[nodeId] || !isMapProjectDetailEnabled(nodeId)) return;
       if (document.documentElement.classList.contains("project-inline-open")) return;
       dismissMapProjectTemplateImageViewer();
       var isFreshOpen = !document.documentElement.classList.contains("map-project-open");
+      mapProjectClosing = false;
       if (isFreshOpen) {
         prepareMapProjectOpenState();
       }
@@ -9407,6 +8298,7 @@
         practiceTitle.textContent = detail.title;
       }
       renderMapProjectDetailPage(nodeId, detail, pageData);
+      if (!isFreshOpen) animatePortfolioOpacity(mapProjectContent, 1, 220, null, .35);
 
       clearMapProjectViewportRecoveryTasks();
       syncMapProjectShellHeight();
@@ -9437,6 +8329,17 @@
     }
 
     function closeMapProject() {
+      if (mapProjectClosing || (!mapDetailState.activeNodeId && !document.documentElement.classList.contains("map-project-open"))) return;
+      mapProjectClosing = true;
+      stopMapProjectDetailMedia();
+      revealPortfolioSurface(mapProjectNav, false);
+      revealPortfolioSurface(mapProjectShell, false, function () {
+        mapProjectClosing = false;
+        finishCloseMapProject();
+      });
+    }
+
+    function finishCloseMapProject() {
       if (!mapDetailState.activeNodeId && !document.documentElement.classList.contains("map-project-open")) return;
       clearMapProjectViewportRecoveryTasks();
       mapDetailState.activeNodeId = null;
@@ -9459,6 +8362,7 @@
       mapProjectScroll.scrollTop = 0;
       clearMapProjectShellHeight();
       unlockPageScrollForMapDetail();
+      if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) preloadConfiguredSlides();
       window.requestAnimationFrame(function () {
         syncPracticeResponsiveLayout(false);
         syncMapCenterNavState();
@@ -9669,32 +8573,31 @@
           captionAwardLogo.removeAttribute("src");
         }
       }
-      caption.hidden = false;
-      caption.setAttribute("aria-hidden", "false");
+      revealPortfolioSurface(caption, true);
     }
 
     function hideCaption() {
       if (!caption) return;
-      caption.hidden = true;
-      caption.setAttribute("aria-hidden", "true");
-      if (captionTitle) captionTitle.textContent = "";
-      if (captionDesc) captionDesc.textContent = "";
-      if (captionAward) {
-        captionAward.hidden = true;
-        captionAward.setAttribute("aria-hidden", "true");
-      }
-      if (captionAwardLogo) {
-        captionAwardLogo.hidden = true;
-        captionAwardLogo.removeAttribute("src");
-      }
-      if (captionAwardText) captionAwardText.textContent = "";
-      caption.style.removeProperty("--map-hover-caption-cursor-x");
-      caption.style.removeProperty("--map-hover-caption-cursor-y");
-      caption.style.removeProperty("--map-hover-caption-cursor-w");
-      caption.removeAttribute("data-cursor-placement");
-      if (captionAwardText) {
-        captionAwardText.style.removeProperty("--map-hover-caption-award-text-scale");
-      }
+      revealPortfolioSurface(caption, false, function () {
+        if (captionTitle) captionTitle.textContent = "";
+        if (captionDesc) captionDesc.textContent = "";
+        if (captionAward) {
+          captionAward.hidden = true;
+          captionAward.setAttribute("aria-hidden", "true");
+        }
+        if (captionAwardLogo) {
+          captionAwardLogo.hidden = true;
+          captionAwardLogo.removeAttribute("src");
+        }
+        if (captionAwardText) captionAwardText.textContent = "";
+        caption.style.removeProperty("--map-hover-caption-cursor-x");
+        caption.style.removeProperty("--map-hover-caption-cursor-y");
+        caption.style.removeProperty("--map-hover-caption-cursor-w");
+        caption.removeAttribute("data-cursor-placement");
+        if (captionAwardText) {
+          captionAwardText.style.removeProperty("--map-hover-caption-award-text-scale");
+        }
+      }, !!mapDetailState.activeNodeId);
     }
 
     function getCaptionReservedHeight() {
@@ -10050,8 +8953,7 @@
       showCaption(nodeId);
       syncPreviewSize(item, activeMode, activeConfig);
       setMode(activeMode, activeConfig);
-      preview.hidden = false;
-      preview.setAttribute("aria-hidden", "false");
+      revealPortfolioSurface(preview, true);
       preview.setAttribute("data-detail-enabled", detailEnabled ? "true" : "false");
       if (canHover && !force) {
         positionCursorPreview();
@@ -10060,6 +8962,14 @@
 
       if (activeMode === "open-traces" && mirrorVideo) {
         stopSlideshow();
+        var deferredSources = mirrorVideo.querySelectorAll("source[data-preview-src]");
+        if (deferredSources.length) {
+          deferredSources.forEach(function (source) {
+            source.src = source.dataset.previewSrc;
+            delete source.dataset.previewSrc;
+          });
+          mirrorVideo.load();
+        }
         mirrorVideo.currentTime = 0;
         mirrorVideo.play().catch(function () {});
       } else if (activeMode === "slideshow") {
@@ -10080,20 +8990,21 @@
       activeItem = null;
       activeMode = "";
       activeConfig = null;
-      preview.style.setProperty("--map-center-preview-shift-y", "0px");
-      clearCursorPreviewPoint();
-      preview.hidden = true;
-      preview.setAttribute("aria-hidden", "true");
-      preview.removeAttribute("data-detail-enabled");
-      preview.classList.remove(
-        "map-center-hover-preview--open-traces",
-        "map-center-hover-preview--slideshow",
-        "map-center-hover-preview--placeholder",
-        "map-center-hover-preview--slideshow-crossfade"
-      );
+      hasCursorPreviewPoint = false;
+      revealPortfolioSurface(preview, false, function () {
+        preview.style.setProperty("--map-center-preview-shift-y", "0px");
+        clearCursorPreviewPoint();
+        preview.removeAttribute("data-detail-enabled");
+        preview.classList.remove(
+          "map-center-hover-preview--open-traces",
+          "map-center-hover-preview--slideshow",
+          "map-center-hover-preview--placeholder",
+          "map-center-hover-preview--slideshow-crossfade"
+        );
+        stopMirrorVideo();
+        stopSlideshow();
+      }, !!mapDetailState.activeNodeId);
       hideCaption();
-      stopMirrorVideo();
-      stopSlideshow();
     }
 
     function getPracticeOnboardingRecommendedItem() {
@@ -11109,7 +10020,7 @@
     });
 
     document.addEventListener("keydown", function (event) {
-      if (!mapDetailState.activeNodeId) return;
+      if (!mapDetailState.activeNodeId || event.defaultPrevented) return;
       var target = event.target;
       var isTypingTarget = target && (
         target.tagName === "INPUT" ||
@@ -11148,8 +10059,14 @@
     var previewIcon = document.getElementById("external-link-hover-preview-icon");
     var previewLabel = document.getElementById("external-link-hover-preview-label");
     if (!preview || !previewIcon || !previewLabel) return;
-
     var canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    var textLiquidMedia = window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)");
+    var liquidAnchorEl = null;
+    var liquid = window.PortfolioGooeyPopover && window.PortfolioGooeyPopover.create(preview, {
+      anchor: getExternalHighlightRect, anchorShape: "rect", delay: 210,
+      enterDuration: 280, exitDuration: 140,
+      enabled: function () { return textLiquidMedia.matches && !!liquidAnchorEl; }
+    });
     var EXTERNAL_TEXT_CLASS = "external-link-hoverfx";
     var activeTargetEl = null;
     var iconLoadToken = 0;
@@ -11373,8 +10290,20 @@
       });
     }
 
-    function positionPreview(clientX, clientY) {
-      if (!isVisible) return;
+    function getExternalHighlightRect() {
+      if (!liquidAnchorEl) return null;
+      var rect = liquidAnchorEl.getBoundingClientRect();
+      var css = window.getComputedStyle(liquidAnchorEl, "::before");
+      var scale = rect.width / liquidAnchorEl.offsetWidth || 1;
+      var left = (parseFloat(css.left) || 0) * scale;
+      var right = (parseFloat(css.right) || 0) * scale;
+      var height = (parseFloat(css.height) || liquidAnchorEl.offsetHeight) * scale;
+      return { left: rect.left + left, top: rect.bottom - (parseFloat(css.bottom) || 0) * scale - height,
+        width: rect.width - left - right, height: height, radius: (parseFloat(css.borderTopLeftRadius) || 0) * scale };
+    }
+
+    function positionPreview(clientX, clientY, force) {
+      if (!isVisible || (!force && liquid && liquid.isAnimating)) return;
       var rect = preview.getBoundingClientRect();
       var nextX = clientX + CURSOR_OFFSET_X;
       var nextY = clientY + CURSOR_OFFSET_Y;
@@ -11393,8 +10322,13 @@
 
     function showPreview(target, clientX, clientY) {
       if (!target || !target.element) return;
+      if (activeTargetEl === target.element && isVisible) { positionPreview(clientX, clientY); return; }
       activeTargetEl = target.element;
       ensureExternalTextStyle(target.element);
+      if (liquidAnchorEl && liquidAnchorEl !== target.element) liquidAnchorEl.classList.remove("is-gooey-source");
+      liquidAnchorEl = textLiquidMedia.matches && target.element.classList.contains(EXTERNAL_TEXT_CLASS)
+        && !target.element.hasAttribute("data-external-textfx-disabled") ? target.element : null;
+      if (liquidAnchorEl) liquidAnchorEl.classList.add("is-gooey-source");
       preview.classList.toggle("external-link-hover-preview--text-only", !!target.textOnly);
       previewLabel.textContent = target.textOnly ? target.label : getPreviewLabel(target.element, target.url);
       preview.hidden = false;
@@ -11405,18 +10339,26 @@
       } else {
         loadIconForTarget(target);
       }
-      positionPreview(clientX, clientY);
+      positionPreview(clientX, clientY, true);
+      if (liquid) liquid.setOpen(true);
     }
 
-    function hidePreview() {
+    function hidePreview(event) {
       activeTargetEl = null;
       isVisible = false;
-      preview.hidden = true;
       preview.setAttribute("aria-hidden", "true");
-      preview.style.transform = "translate3d(-9999px, -9999px, 0)";
-      previewLabel.textContent = "";
-      preview.classList.remove("external-link-hover-preview--text-only");
-      resetIcon();
+      function clear() {
+        preview.hidden = true;
+        preview.style.transform = "translate3d(-9999px, -9999px, 0)";
+        previewLabel.textContent = "";
+        preview.classList.remove("external-link-hover-preview--text-only");
+        if (liquidAnchorEl) liquidAnchorEl.classList.remove("is-gooey-source");
+        liquidAnchorEl = null;
+        resetIcon();
+      }
+      var immediate = !!(event && /^(scroll|blur|hashchange|resize)$/.test(event.type));
+      if (liquid) liquid.setOpen(false, immediate, clear);
+      else clear();
     }
 
     document.addEventListener("click", function (event) {
@@ -11443,6 +10385,9 @@
 
     window.addEventListener("blur", hidePreview);
     window.addEventListener("scroll", hidePreview, true);
+    window.addEventListener("hashchange", hidePreview);
+    window.addEventListener("resize", hidePreview);
+    textLiquidMedia.addEventListener("change", function () { hidePreview({ type: "resize" }); });
 
     if (!canHover) return;
 
@@ -11477,6 +10422,29 @@
     var previewProgressTrack = document.getElementById("map-project-detail-hotspot-preview-pagination-track");
     var detailRoot = document.querySelector(".map-project-detail-page");
     if (!preview || !previewImg || !previewVideo || !previewProgress || !previewProgressTrack || !detailRoot) return;
+
+    function configureNorrtagLoading(host, img, target) {
+      if (!target.classList.contains("norrtag-hotspot")) {
+        detachImageLoadingListeners(img);
+        detachImageLoadingFromHost(img);
+        img.removeAttribute("data-brand-loading");
+        host.removeAttribute("data-brand-image-host");
+        host.removeAttribute("data-norrtag-preview");
+        host.removeAttribute("data-image-loading-state");
+        host.classList.remove("brand-image-host");
+        return;
+      }
+      var width = Number(target.dataset.detailPreviewWidth) || 817;
+      var height = Number(target.dataset.detailPreviewHeight) || 825;
+      var ratio = width / height;
+      var size = Math.min(width, 52 * parseFloat(getComputedStyle(document.documentElement).fontSize), innerWidth - 24, innerHeight * .72 * ratio);
+      host.dataset.brandImageHost = "";
+      host.dataset.norrtagPreview = "";
+      host.style.setProperty("--norrtag-preview-width", size + "px");
+      host.style.setProperty("--norrtag-preview-height", (size / ratio) + "px");
+      host.style.setProperty("--norrtag-preview-ratio", String(ratio));
+      img.dataset.brandLoading = "";
+    }
 
     var canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -11575,6 +10543,7 @@
         inlinePreviewImg.addEventListener("load", function () {
           if (!inlinePreviewSyncTarget) return;
           syncInlinePreviewReserve(inlinePreviewSyncTarget);
+          if (!inlinePreviewImg.hasAttribute("data-brand-loading")) animatePortfolioOpacity(inlinePreviewImg, 1, 160, null, .65);
         });
       }
 
@@ -11645,7 +10614,9 @@
           "--map-project-detail-hotspot-inline-preview-max-height",
           readLengthAttr(target, "data-detail-preview-max-height", "28rem")
         );
+        configureNorrtagLoading(inlinePreview, inlinePreviewImg, target);
         inlinePreviewImg.src = src;
+        bindImageLoadingState(inlinePreviewImg, { forceResync: true });
         inlinePreviewImg.alt = (target.getAttribute("data-detail-preview-alt") || target.textContent || "").trim();
         inlinePreview.hidden = false;
         inlinePreview.setAttribute("aria-hidden", "false");
@@ -11684,6 +10655,7 @@
     var isVisible = false;
     var lastClientX = 0;
     var lastClientY = 0;
+    var previewPositionRaf = 0;
     var activeOffsetX = 18;
     var activeOffsetY = 18;
     var activeContentLeftRatio = 0;
@@ -11880,8 +10852,22 @@
       preview.style.transform = "translate3d(" + Math.round(nextX) + "px, " + Math.round(nextY) + "px, 0)";
     }
 
+    function schedulePreviewPosition(clientX, clientY) {
+      lastClientX = clientX;
+      lastClientY = clientY;
+      if (previewPositionRaf) return;
+      previewPositionRaf = window.requestAnimationFrame(function () {
+        previewPositionRaf = 0;
+        positionPreview(lastClientX, lastClientY);
+      });
+    }
+
     function showPreview(target, clientX, clientY) {
       if (!target) return;
+      if (activeTargetEl === target && isVisible) {
+        schedulePreviewPosition(clientX, clientY);
+        return;
+      }
       var src = (target.getAttribute("data-detail-preview-src") || "").trim();
       var videoSrc = (target.getAttribute("data-detail-preview-video-src") || "").trim();
       var slideshowSources = parsePreviewSlidesSources(target);
@@ -11894,6 +10880,7 @@
       lastClientX = clientX;
       lastClientY = clientY;
       applyPreviewConfig(target);
+      configureNorrtagLoading(preview, previewImg, target);
       stopPreviewSlideshow();
       if (videoSrc) {
         activeMediaMode = "video";
@@ -11927,8 +10914,7 @@
           previewImg.alt = (target.getAttribute("data-detail-preview-alt") || target.textContent || "").trim();
         }
       }
-      preview.hidden = false;
-      preview.setAttribute("aria-hidden", "false");
+      revealPortfolioSurface(preview, true);
       positionPreview(clientX, clientY);
       window.requestAnimationFrame(function () {
         if (!isVisible) return;
@@ -11940,31 +10926,36 @@
       activeTargetEl = null;
       isVisible = false;
       stopPreviewSlideshow();
-      preview.hidden = true;
-      preview.setAttribute("aria-hidden", "true");
-      preview.style.transform = "translate3d(-9999px, -9999px, 0)";
-      previewImg.removeAttribute("src");
-      previewImg.alt = "";
-      previewImg.style.removeProperty("--map-project-detail-hotspot-preview-max-width");
-      previewImg.style.removeProperty("--map-project-detail-hotspot-preview-max-height");
-      previewImg.hidden = false;
-      previewVideo.style.removeProperty("--map-project-detail-hotspot-preview-max-width");
-      previewVideo.style.removeProperty("--map-project-detail-hotspot-preview-max-height");
-      stopPreviewVideoPlayback();
+      if (previewPositionRaf) window.cancelAnimationFrame(previewPositionRaf);
+      previewPositionRaf = 0;
+      try { previewVideo.pause(); } catch (error) {}
       stopPreviewProgress();
-      previewProgress.hidden = true;
-      syncPreviewProgressPagination(0, 0);
-      activeMediaMode = "image";
-      activeOffsetX = 18;
-      activeOffsetY = 18;
-      activeContentLeftRatio = 0;
-      activeContentRightRatio = 0;
-      activeContentTopRatio = 0;
-      activeContentBottomRatio = 0;
+      revealPortfolioSurface(preview, false, function () {
+        preview.style.transform = "translate3d(-9999px, -9999px, 0)";
+        previewImg.removeAttribute("src");
+        previewImg.alt = "";
+        previewImg.style.removeProperty("--map-project-detail-hotspot-preview-max-width");
+        previewImg.style.removeProperty("--map-project-detail-hotspot-preview-max-height");
+        previewImg.hidden = false;
+        previewVideo.style.removeProperty("--map-project-detail-hotspot-preview-max-width");
+        previewVideo.style.removeProperty("--map-project-detail-hotspot-preview-max-height");
+        stopPreviewVideoPlayback();
+        stopPreviewProgress();
+        previewProgress.hidden = true;
+        syncPreviewProgressPagination(0, 0);
+        activeMediaMode = "image";
+        activeOffsetX = 18;
+        activeOffsetY = 18;
+        activeContentLeftRatio = 0;
+        activeContentRightRatio = 0;
+        activeContentTopRatio = 0;
+        activeContentBottomRatio = 0;
+      });
     }
 
     previewImg.addEventListener("load", function () {
       if (!isVisible) return;
+      if (!previewImg.hasAttribute("data-brand-loading")) animatePortfolioOpacity(previewImg, 1, 160, null, .65);
       positionPreview(lastClientX, lastClientY);
     });
     previewVideo.addEventListener("loadedmetadata", function () {
@@ -12003,9 +10994,7 @@
 
     document.addEventListener("pointermove", function (event) {
       if (!activeTargetEl) return;
-      lastClientX = event.clientX;
-      lastClientY = event.clientY;
-      positionPreview(event.clientX, event.clientY);
+      schedulePreviewPosition(event.clientX, event.clientY);
     }, true);
 
     document.addEventListener("pointerout", function (event) {
@@ -12071,8 +11060,8 @@
     });
   }
 
-  function initMapProjectDetailSectionCConclusionCarousel() {
-    var carouselRoot = document.querySelector(
+  function initMapProjectDetailSectionCConclusionCarousel(providedRoot) {
+    var carouselRoot = providedRoot || document.querySelector(
       "#map-project-detail-section-c .map-project-detail-section-c-conclusion-visual"
     );
     if (!carouselRoot) return;
@@ -12092,6 +11081,8 @@
     var intervalMs = parseInt(carouselRoot.getAttribute("data-carousel-interval-ms") || "", 10);
     if (!isFinite(intervalMs) || intervalMs < 400) intervalMs = 2000;
 
+    var managesVisibility = !!providedRoot || !!carouselRoot.closest("#map-project-inline-scroll");
+    var managedVisible = false;
     var activeIndex = 0;
     var timerId = 0;
     var progressRaf = 0;
@@ -12102,14 +11093,23 @@
         slide.pause();
       } catch (error) {}
       try {
-        slide.currentTime = 0;
+        if (slide.currentTime > 0) slide.currentTime = 0;
       } catch (error) {}
     }
 
+    function prepareSlide(slide) {
+      if (providedRoot && managedVisible && window.ProjectMedia) {
+        window.ProjectMedia.hydrateCarousel(slide);
+      }
+    }
+
     function playSlideVideo(slide) {
-      if (!slide || slide.tagName !== "VIDEO") return;
+      if (managesVisibility && !managedVisible) return;
+      if (!slide) return;
+      prepareSlide(slide);
+      if (slide.tagName !== "VIDEO") return;
       slide.muted = true;
-      slide.loop = false;
+      slide.loop = slides.length === 1;
       try {
         slide.currentTime = 0;
       } catch (error) {}
@@ -12171,6 +11171,7 @@
       });
 
       syncIndicators(activeIndex);
+      if (providedRoot && window.PortfolioMediaLoading) window.PortfolioMediaLoading.refresh(stage);
     }
 
     function clearAutoAdvanceState() {
@@ -12308,7 +11309,7 @@
       });
     }
 
-    document.addEventListener("visibilitychange", function () {
+    function onVisibilityChange() {
       if (document.hidden) {
         clearAutoAdvanceState();
         slides.forEach(function (slide) {
@@ -12316,29 +11317,86 @@
         });
         return;
       }
+      if (managesVisibility && !managedVisible) return;
       setActiveSlide(activeIndex);
       queueNextTick();
-    });
-
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
     setActiveSlide(0);
-    queueNextTick();
+    if (managesVisibility) {
+      var observer = new IntersectionObserver(function (entries) {
+        managedVisible = entries[0].isIntersecting && entries[0].intersectionRatio >= 0.2;
+        if (managedVisible) {
+          playSlideVideo(slides[activeIndex]);
+          queueNextTick();
+        } else {
+          clearAutoAdvanceState();
+          slides.forEach(stopSlideVideo);
+        }
+      }, { root: document.getElementById("map-project-inline-scroll"), threshold: 0.2 });
+      observer.observe(carouselRoot);
+      carouselRoot.carouselCleanup = function () {
+        observer.disconnect();
+        clearAutoAdvanceState();
+        slides.forEach(stopSlideVideo);
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+      };
+    } else queueNextTick();
+  }
+  window.initPortfolioMediaCarousel = initMapProjectDetailSectionCConclusionCarousel;
+
+  // Reserve room for the real contact-row height instead of assuming one line.
+  function initLandingContactLayout() {
+    var hero = document.getElementById("homepage---left");
+    var header = hero && hero.querySelector(".landing3042-header");
+    var contacts = hero && hero.querySelector(".landing3042-contact-links");
+    if (!header || !contacts) return;
+    var frame = 0;
+    function sync() {
+      frame = 0;
+      if (window.innerWidth >= 560) {
+        hero.style.removeProperty("--landing-contact-top");
+        return;
+      }
+      var top = Math.ceil(header.offsetTop + header.offsetHeight + 12);
+      hero.style.setProperty("--landing-contact-top", top + "px");
+    }
+    function queue() {
+      if (!frame) frame = window.requestAnimationFrame(sync);
+    }
+    window.addEventListener("resize", queue, { passive: true });
+    if (window.ResizeObserver) {
+      var observer = new ResizeObserver(queue);
+      observer.observe(header);
+      observer.observe(contacts);
+    }
+    if (document.fonts) document.fonts.ready.then(queue);
+    sync();
+  }
+
+  function activateVisibleMapThumbnails() {
+    document.querySelectorAll("img[data-map-thumbnail-src]").forEach(function (img) {
+      var style = window.getComputedStyle(img);
+      if (style.display === "none" || Number(style.opacity) === 0 || !img.getClientRects().length) return;
+      img.src = img.getAttribute("data-map-thumbnail-src");
+      img.removeAttribute("data-map-thumbnail-src");
+    });
   }
 
   function init() {
+    activateVisibleMapThumbnails();
+    window.addEventListener("resize", activateVisibleMapThumbnails);
     initBrandedImageLoading();
     if (!document.querySelector(ROOT_SELECTOR)) return;
 
     setMode();
     document.documentElement.setAttribute("data-bubble-motion-build", "20260309-9");
     syncViewportVars();
+    initLandingContactLayout();
     var bubbleMotionApi = initLandingBubbleMotion();
     bindBottomAreaScroll();
     initNamecardFlip();
     initLandingExclusionInline(bubbleMotionApi);
-    initLandingStudioInline(bubbleMotionApi);
-    initLandingExclusionGame();
-    initLandingModals();
-    initProjectInlineProjectView();
     initMapCenterHoverPreview();
     initExternalLinkHoverPreview();
     initMapProjectDetailHotspotPreview();

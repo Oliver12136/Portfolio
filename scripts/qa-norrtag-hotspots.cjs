@@ -1,0 +1,18 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});const errors=[];try{
+ const p=await b.newPage({viewport:{width:1440,height:1000}});p.on('pageerror',e=>errors.push(e.message));
+ await p.goto('http://127.0.0.1:4173/#map-project=norrtag');await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(400);
+ for (const axis of await p.locator('.mypractice-map-axis').all()) assert(await axis.isHidden(), 'Overview axis leaked into project detail');
+ const hotspots=p.locator('.norrtag-hotspot');assert.equal(await hotspots.count(),4);
+ const targets=[['travel experiences','ep1.webp','rgb(244, 188, 65)'],['Proactive Data & Route Clarity','bp1.webp','rgb(36, 87, 169)'],['Multi-Modal Announcements','bp2.webp','rgb(36, 87, 169)'],['Passenger & Staff Communication','bp3.webp','rgb(36, 87, 169)']];
+ for(let i=0;i<4;i++){const target=hotspots.nth(i);assert.equal(await target.textContent(),targets[i][0]);await target.scrollIntoViewIfNeeded();await target.hover();await p.waitForTimeout(150);
+ const result=await target.evaluate(e=>({font:getComputedStyle(e).fontSize,parentFont:getComputedStyle(e.parentElement).fontSize,bg:getComputedStyle(e).backgroundColor}));assert.equal(result.font,result.parentFont);assert.equal(result.bg,targets[i][2]);
+ assert(await p.locator('#map-project-detail-hotspot-preview').isVisible());assert((await p.locator('#map-project-detail-hotspot-preview-img').getAttribute('src')).endsWith(targets[i][1]));
+ if(i===0){await p.waitForFunction(()=>document.querySelector('#map-project-detail-hotspot-preview-img').src.endsWith('ep2.webp'));await p.waitForFunction(()=>document.querySelector('#map-project-detail-hotspot-preview-img').src.endsWith('ep3.webp'));}
+ await p.mouse.move(2,2);
+ }
+ for(let width of[1920,1440,1080,1079,900,768,767,560,390,320]){await p.setViewportSize({width,height:1000});await p.waitForTimeout(250);const delta=await p.locator('.norrtag-route').evaluate(e=>{let r=document.createRange();r.selectNodeContents(document.querySelector('.norrtag-research-count'));return e.getBoundingClientRect().right-r.getBoundingClientRect().right});assert(Math.abs(delta)<1,`${width}: route differs from text edge by ${delta}`);}
+ await p.goto('http://127.0.0.1:4173');for(let width of[1920,1440,1080,900,768,767,700,560,390,320]){await p.setViewportSize({width,height:850});await p.locator('#homepage---right').scrollIntoViewIfNeeded();await p.waitForTimeout(250);for(const arrow of await p.locator('.mypractice-map-axis-arrow').all()){const style=await arrow.evaluate(e=>{let s=getComputedStyle(e);return{width:parseFloat(s.width),height:parseFloat(s.height),background:s.backgroundImage,transform:s.transform}});assert.equal(style.background,'none',`${width}: old cross background`);assert(style.width<35&&style.height<35,`${width}: oversized arrow`);assert.equal(style.transform,'none');}}
+ const touch=await b.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await touch.goto('http://127.0.0.1:4173/#map-project=norrtag');await touch.waitForTimeout(500);const t=touch.locator('.norrtag-hotspot').first();await t.scrollIntoViewIfNeeded();await t.tap();assert(await touch.locator('.map-project-detail-hotspot-inline-preview').isVisible());await touch.close();assert.deepEqual(errors,[]);console.log('PASS: route aligned to visible text at 10 widths; EP1–3 hover sequence; BP1–3 heading previews; inherited fonts and theme colors; arrow breakpoint checks; touch preview.');
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,101 @@
+/* My Work, Figma 58:1858 and 58:2068. Grid and project interactions stay shared. */
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis {
+  position: absolute !important; display: none !important; z-index: 6 !important;
+  pointer-events: none !important; color: #000 !important;
+  font: 400 var(--work-axis-font, 26.572px)/1.2 "Atkinson Hyperlegible", sans-serif !important;
+  gap: var(--work-axis-gap, 8px) !important; margin: 0 !important; width: auto !important; height: auto !important;
+  right: auto !important; bottom: auto !important; align-items: center !important;
+}
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis-label {
+  font: inherit !important; line-height: 1.2 !important; opacity: .5;
+  display: block !important; white-space: nowrap !important; margin: 0 !important;
+}
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis-label::after { content: none !important; display: none !important; }
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis-arrow {
+  position: relative !important; display: block !important; order: initial !important;
+  width: var(--work-arrow-width, var(--work-arrow-size, 33.814px)) !important; height: var(--work-arrow-height, var(--work-arrow-size, 33.814px)) !important;
+  background: none !important; border: 0 !important; transform: none !important;
+}
+/* Fit each wrapper to the visible half of the rotated SVG, keeping one shared gap. */
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis-arrow::before {
+  content: ""; position: absolute;
+  width: calc(var(--work-arrow-size, 33.814px) * .7453);
+  height: calc(var(--work-arrow-size, 33.814px) * .7429);
+  left: 50%; top: 50%;
+  background: var(--work-arrow) center / contain no-repeat;
+  transform: translate(calc(-50% + var(--work-arrow-shift-x, 0px)), calc(-50% + var(--work-arrow-shift-y, 0px))) rotate(var(--work-arrow-angle));
+}
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis--left {
+  --work-arrow-width: calc(var(--work-arrow-size, 33.814px) * .5);
+  --work-arrow-shift-x: calc(var(--work-arrow-size, 33.814px) * .25);
+  left: var(--work-edge, 30px) !important; top: var(--work-map-middle) !important;
+  transform: translateY(-50%) !important; flex-direction: row !important;
+}
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis--right {
+  --work-arrow-width: calc(var(--work-arrow-size, 33.814px) * .5);
+  --work-arrow-shift-x: calc(var(--work-arrow-size, 33.814px) * -.25);
+  left: auto !important; right: var(--work-edge, 30px) !important; top: var(--work-map-middle) !important;
+  transform: translateY(-50%) !important; flex-direction: row !important;
+}
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis--top {
+  --work-arrow-height: calc(var(--work-arrow-size, 33.814px) * .5);
+  --work-arrow-shift-y: calc(var(--work-arrow-size, 33.814px) * .25);
+  left: 50% !important; top: calc(var(--work-map-top) + var(--work-edge, 30px)) !important;
+  transform: translateX(-50%) !important; flex-direction: column !important;
+}
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis--top .mypractice-map-axis-label { order: 2 !important; }
+html[data-site-mode="figma3042"] #homepage---right .mypractice-map-axis--bottom {
+  --work-arrow-height: calc(var(--work-arrow-size, 33.814px) * .5);
+  --work-arrow-shift-y: calc(var(--work-arrow-size, 33.814px) * -.25);
+  left: 50% !important; top: auto !important; bottom: var(--work-edge, 30px) !important;
+  transform: translateX(-50%) !important; flex-direction: column !important;
+}
+.mypractice-map-axis-arrow--left { --work-arrow: url('./assets/MyPractice/map-guide/left.svg'); --work-arrow-angle: -45deg; }
+.mypractice-map-axis-arrow--right { --work-arrow: url('./assets/MyPractice/map-guide/right.svg'); --work-arrow-angle: 135deg; }
+.mypractice-map-axis-arrow--top { --work-arrow: url('./assets/MyPractice/map-guide/top.svg'); --work-arrow-angle: 45deg; }
+.mypractice-map-axis-arrow--bottom { --work-arrow: url('./assets/MyPractice/map-guide/bottom.svg'); --work-arrow-angle: -135deg; }
+.work-map-help { position: absolute; right: 64px; bottom: 30px; z-index: 12; }
+.work-map-help-button { display: block; width: 51px; height: 51px; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 50%; }
+.work-map-help-button img { display: block; width: 100%; height: 100%; }
+.work-map-help-button:focus-visible { outline: 2px solid #2457a9; outline-offset: 4px; }
+.work-map-help-panel { position: absolute; right: 0; bottom: 54px; padding: 18px 30px 19px 29px; border-radius: 100px; background: #000; color: #bdbdbd; width: max-content; max-width: calc(100vw - 40px); box-sizing: border-box; }
+.work-map-help-panel::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 5px; }
+.work-map-help-panel[hidden] { display: none; }
+.work-map-help-copy p { margin: 0; font: 400 20px/26px "Atkinson Hyperlegible", sans-serif; white-space: nowrap; }
+.work-map-help-copy span { color: #fff; }
+.work-map-help-close { display: none; }
+html.map-project-open .work-map-help, html.project-inline-open .work-map-help { display: none; }
+@media(max-width:767px) {
+  #homepage---right { --work-axis-font: 15px; --work-arrow-size: 22px; --work-edge: 12px; --work-axis-gap: 6px; }
+  .work-map-help { position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 90; }
+  .work-map-help-button { width: 34px; height: 34px; }
+  .work-map-help-panel { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh; padding: 64px 28px; border-radius: 0; display: flex; align-items: center; }
+  .work-map-help-copy p { white-space: normal; margin: 0 0 24px; font-size: 20px; line-height: 1.4; }
+  .work-map-help-close { display: block; position: absolute; right: 18px; top: max(18px, env(safe-area-inset-top)); width: 40px; height: 40px; border: 0; background: transparent; color: #fff; font: 300 36px/1 sans-serif; cursor: pointer; }
+  html.work-guide-open { overflow: hidden; }
+}
+/* Cancel the previous touch-axis rotations; direction is in the Figma SVG wrapper. */
+html[data-site-mode="figma3042"] #homepage---right .practice3042-canvas .mypractice-map-axis .mypractice-map-axis-arrow {
+  transform: none !important;
+  width: var(--work-arrow-width, var(--work-arrow-size, 33.814px)) !important;
+  height: var(--work-arrow-height, var(--work-arrow-size, 33.814px)) !important;
+  background: none !important;
+}
+/* Only the overview can show map directions. Check the real detail container as
+   well as the page state, so opening/closing and breakpoint changes cannot expose them. */
+html[data-site-mode="figma3042"]:not(.map-project-open):not(.project-inline-open) #homepage---right .practice3042-canvas:not(:has(#map-project-inline-shell:not([hidden]))) > .mypractice-map-axis {
+  display: flex !important;
+}
+html[data-site-mode="figma3042"] #homepage---right .practice3042-canvas:has(#map-project-inline-shell:not([hidden])) > .mypractice-map-axis,
+html[data-site-mode="figma3042"].map-project-open #homepage---right .mypractice-map-axis,
+html[data-site-mode="figma3042"].project-inline-open #homepage---right .mypractice-map-axis {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+/* The landing-page call-to-action also belongs exclusively to the homepage. */
+html[data-site-mode="figma3042"].map-project-open #homepage---left .landing3042-practice-cta,
+html[data-site-mode="figma3042"].project-inline-open #homepage---left .landing3042-practice-cta {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

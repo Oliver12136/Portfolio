@@ -6,8 +6,8 @@
   <title>Oghuzhan _wanna_be_changemaker</title>
   <link rel="icon" type="image/png" href="./assets/icon.png" />
   <link rel="apple-touch-icon" href="./assets/icon.png" />
+  <link rel="preload" href="./responsive.shared.js?v=20261009-opentrace-hidden" as="script" fetchpriority="high" />
   <link rel="stylesheet" href="./responsive.shared.css?v=20261009-exclusion-feedback" />
-  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
   <script>
     (function () {
       function syncLandingSurfaceFromSearch() {
@@ -15,7 +15,7 @@
         var requestedSurface = params.get("landingSurface") || params.get("landing-surface");
         if (!requestedSurface) return;
         var normalized = String(requestedSurface).toLowerCase();
-        if (normalized !== "studio" && normalized !== "exclusion") return;
+        if (normalized !== "exclusion") return;
         document.documentElement.setAttribute("data-landing-surface-state", normalized);
       }
 
@@ -42,6 +42,7 @@
       function maybeRunFigmaCapture() {
         var config = readFigmaCaptureConfig();
         document.documentElement.classList.toggle("figma-capture-active", !!config);
+        document.documentElement.classList.toggle("figma-capture-path", !!config && config.selector === "#homepage---left");
         if (!config) return;
         if (window.__figmaAutoCaptureLastId === config.captureId) return;
 
@@ -75,6 +76,10 @@
       window.addEventListener("hashchange", maybeRunFigmaCapture);
     })();
   </script>
+  <link rel="stylesheet" href="./work-map.css?v=20261019-axis-spacing">
+  <link rel="stylesheet" href="./gooey-popover.css">
+  <script src="./gooey-popover.js" defer></script>
+  <script src="./work-map.js" defer></script>
 </head>
 <body>
   <main class="home3042" id="site-shell">
@@ -98,208 +103,71 @@
               </p>
             </header>
 
-            <a
-              href="mailto:hi@oghuzhan.work"
-              class="landing3042-email-link external-link-hoverfx"
-              data-copy-to-clipboard="hi@oghuzhan.work"
-              data-copy-preview-title="Copy"
-              aria-label="Copy email address hi@oghuzhan.work"
-              style="--external-link-fill: #111111; --external-link-hover-fg: #ffffff;"
-            >hi@oghuzhan.work</a>
+            <div class="landing3042-contact-links">
+              <a href="https://blog.oghuzhan.work/" target="_blank" rel="noopener noreferrer"
+                class="landing3042-email-link landing3042-writing-link external-link-hoverfx"
+                data-external-preview-title="Oğuzhan"
+                data-external-preview-icon="https://blog.oghuzhan.work/icon.png"
+                style="--external-link-fill: #111111; --external-link-hover-fg: #ffffff;">Writing Samples</a>
+              <a
+                href="mailto:hi@oghuzhan.work"
+                class="landing3042-email-link external-link-hoverfx"
+                data-copy-to-clipboard="hi@oghuzhan.work"
+                data-copy-preview-title="Copy"
+                aria-label="Copy email address hi@oghuzhan.work"
+                style="--external-link-fill: #111111; --external-link-hover-fg: #ffffff;"
+              >hi@oghuzhan.work</a>
+            </div>
 
-            <section
-              id="landing3042-exclusion-inline"
-              class="landing3042-exclusion-inline"
-              aria-labelledby="landing3042-exclusion-title"
-              aria-hidden="true"
-            >
-              <article class="landing3042-exclusion-panel" data-exclusion-layout="name-entry">
-                <h2 id="landing3042-exclusion-title" class="landing3042-exclusion-a11y-title">Name validation game</h2>
-                <section class="landing3042-exclusion-game-shell" aria-labelledby="landing3042-exclusion-title">
-                  <form class="landing3042-exclusion-game" data-exclusion-game-form>
-                    <label class="landing3042-exclusion-game-input-shell" for="landing3042-exclusion-name-input">
-                      <span class="landing3042-exclusion-a11y-title">Type your name</span>
-                      <input
-                        id="landing3042-exclusion-name-input"
-                        class="landing3042-exclusion-game-input"
-                        type="text"
-                        name="name"
-                        placeholder="J. Doe"
-                        autocomplete="name"
-                        spellcheck="false"
-                        aria-describedby="landing3042-exclusion-game-message"
-                        data-exclusion-game-input
-                      />
-                    </label>
-                    <button class="landing3042-exclusion-game-verify" type="submit">Verify</button>
-                    <div class="landing3042-exclusion-game-status">
-                      <p
-                        id="landing3042-exclusion-game-message"
-                        class="landing3042-exclusion-game-message"
-                        data-copy-key="shared.home.left.exclusion.game.initial"
-                        data-exclusion-game-message
-                        role="status"
-                        aria-live="polite"
-                      >Please type your name to start.</p>
-                    </div>
-                  </form>
-                </section>
-              </article>
-            </section>
-
-            <button
-              id="landing3042-exclusion-close"
-              class="map-project-inline-close landing3042-exclusion-close"
-              type="button"
-              aria-label="Close Exclusion view"
-              aria-hidden="true"
-              tabindex="-1"
-            >
-              <img
-                class="map-project-inline-close-icon"
-                src="./assets/Exclusion/name-entry-close.svg"
-                alt=""
-                loading="eager"
-                decoding="async"
-              />
-            </button>
-
-            <section
-              id="landing3042-studio-inline"
-              class="landing3042-studio-inline"
-              aria-labelledby="landing3042-studio-inline-title"
-              aria-hidden="true"
-            >
-              <article class="landing3042-studio-panel">
-                <div class="landing3042-studio-surface">
-                  <button
-                    id="landing3042-studio-close"
-                    class="map-project-inline-close landing3042-studio-close"
-                    type="button"
-                    aria-label="Close Studio view"
-                    aria-hidden="true"
-                    tabindex="-1"
-                  >
-                    <img
-                      class="map-project-inline-close-icon"
-                      src="./assets/GanStudio/gan-studio-close.svg?v=20260403-2"
-                      alt=""
-                      loading="eager"
-                      decoding="async"
-                    />
-                  </button>
-
-                  <header class="landing3042-studio-header">
-                    <h2
-                      id="landing3042-studio-inline-title"
-                      class="landing3042-studio-title"
-                      data-copy-key="shared.home.left.gan.heading"
-                    >gan studio</h2>
-                    <p
-                      class="landing3042-studio-subtitle"
-                      data-copy-key="shared.home.left.gan.subtitle"
-                      data-copy-mode="html"
-                    >A place for both local connections and creative experiments.</p>
+            <section id="landing3042-exclusion-inline" class="exclusion-experience" role="dialog" aria-modal="true" aria-labelledby="exclusion-title" aria-hidden="true" hidden>
+              <div class="exclusion-scroll" tabindex="-1">
+                <section class="exclusion-canvas" aria-labelledby="exclusion-title" data-figma-node="89:2383">
+                  <header class="exclusion-header">
+                    <h1 id="exclusion-title">My Path</h1>
+                    <p>From an Exclusion Triggered by a “·”<br>To Designing from/for/with Margins</p>
                   </header>
-
-                  <section class="landing3042-studio-main" aria-label="gan studio projects">
-                    <figure class="landing3042-studio-logo-block" aria-label="GAN logo">
-                      <div class="gan3042-logo-carousel landing3042-studio-logo-carousel" aria-label="GAN logo slideshow">
-                        <img
-                          class="gan3042-logo-slide gan3042-logo-slide-1"
-                          alt="GAN logo variation 1"
-                          src="./assets/GanStudio/gan1.png"
-                          loading="eager"
-                          decoding="async"
-                        />
-                        <img
-                          class="gan3042-logo-slide gan3042-logo-slide-2"
-                          alt="GAN logo variation 2"
-                          src="./assets/GanStudio/gan2.png"
-                          loading="eager"
-                          decoding="async"
-                        />
-                        <img
-                          class="gan3042-logo-slide gan3042-logo-slide-3"
-                          alt="GAN logo variation 3"
-                          src="./assets/GanStudio/gan3.png"
-                          loading="eager"
-                          decoding="async"
-                        />
-                        <img
-                          class="gan3042-logo-slide gan3042-logo-slide-4"
-                          alt="GAN logo variation 4"
-                          src="./assets/GanStudio/gan4.png"
-                          loading="eager"
-                          decoding="async"
-                        />
-                      </div>
-                    </figure>
-
-                    <div class="landing3042-studio-projects">
-                      <h3 class="landing3042-studio-project-title">🚧 gan project 🚧</h3>
-
-                      <div class="landing3042-studio-project-list">
-                        <div class="landing3042-studio-project-row">
-                          <a
-                            class="landing3042-studio-project-link"
-                            data-studio-project-link
-                            href="./overlay-minimovesmatter.html"
-                            data-copy-key="shared.home.left.projects.minimoves"
-                          >Mini Moves Matter</a>
-                          <a
-                            class="landing3042-studio-project-more"
-                            data-studio-project-more
-                            href="./overlay-minimovesmatter.html"
-                            data-copy-key="shared.home.left.cta.seemore"
-                          >see more</a>
-                        </div>
-
-                        <div class="landing3042-studio-project-row">
-                          <a
-                            class="landing3042-studio-project-link"
-                            data-studio-project-link
-                            href="./overlay-sustainableWaves.html"
-                            data-copy-key="shared.home.left.projects.sustainable"
-                          >Sustainable Waves</a>
-                          <a
-                            class="landing3042-studio-project-more"
-                            data-studio-project-more
-                            href="./overlay-sustainableWaves.html"
-                            data-copy-key="shared.home.left.cta.seemore"
-                          >see more</a>
-                        </div>
-
-                        <div class="landing3042-studio-project-row">
-                          <a
-                            class="landing3042-studio-project-link"
-                            data-studio-project-link
-                            href="./overlay-shanghaisummerschool.html"
-                            data-copy-key="shared.home.left.projects.summerschool"
-                          >SJTU X SUTD Joint Shanghai Summer School</a>
-                          <a
-                            class="landing3042-studio-project-more"
-                            data-studio-project-more
-                            href="./overlay-shanghaisummerschool.html"
-                            data-copy-key="shared.home.left.cta.seemore"
-                          >see more</a>
-                        </div>
-                      </div>
+                  <div class="exclusion-ink" role="region" aria-label="Fictional identity-system responses" aria-live="off"></div>
+                  <div class="exclusion-authentication">
+                    <label for="landing3042-exclusion-name-input">Authentication</label>
+                    <input id="landing3042-exclusion-name-input" data-exclusion-game-input type="text" placeholder="J. Doe" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="exclusion-instruction" dir="auto">
+                    <p id="exclusion-instruction">Please type your name to start.</p>
+                  </div>
+                  <button class="exclusion-sequence exclusion-why" type="button" aria-controls="exclusion-reflection">
+                    <span class="exclusion-arrow"><img src="./assets/Exclusion/editorial/arrow-down.svg" alt="" decoding="async"></span><span>why?</span>
+                  </button>
+                </section>
+                <section class="exclusion-reflection" id="exclusion-reflection" aria-labelledby="exclusion-what" data-figma-node="89:2418">
+                  <button class="exclusion-sequence exclusion-snapshot" type="button" aria-controls="exclusion-title">
+                    <span class="exclusion-arrow"><img src="./assets/Exclusion/editorial/arrow-up.svg" alt="" decoding="async"></span><span>snapshot of my experience</span>
+                  </button>
+                  <div class="exclusion-editorial-row exclusion-intro">
+                    <div class="exclusion-copy">
+                      <h2 id="exclusion-what" tabindex="-1">What is it?</h2>
+                      <p>These are snapshots of my everyday experiences of exclusion through digital identity verification.</p>
+                      <p>In China, many apps require real-name verification, yet the middle dot (·) in my legal Uyghur name is sometimes rejected as an “illegal character.” Something as simple as signing up for an app can become an absurd negotiation with my own identity.</p>
                     </div>
-                  </section>
-
-                  <p class="landing3042-studio-writing">
-                    <a
-                      class="landing3042-studio-writing-link external-link-hoverfx"
-                      data-href-key="link.writing.samples"
-                      href="https://oghuz.notion.site/writing-samples?pvs=74"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    ><span data-copy-key="shared.home.left.writing.samples">My writing samples</span></a>
-                  </p>
-                </div>
-              </article>
+                    <figure data-figma-node="96:2531"><img src="./assets/Exclusion/editorial/experience-comic@3x.png" width="612" height="343" alt="Personal-experience comic: a system asks for my real name, rejects its middle dot, then rejects the name without the dot because it does not match my national ID." loading="lazy" decoding="async"></figure>
+                  </div>
+                  <div class="exclusion-reasons">
+                    <h2>Why would it happen?</h2>
+                    <div class="exclusion-editorial-row">
+                      <div class="exclusion-copy"><h3>1.Political suppression of Uyghurs</h3><p>This technical exclusion exists within a broader context of political suppression of Uyghur language and identity.</p><p>Even when a validation error is unintentional, rigid digital standards can reinforce whose identities are considered normal—and whose are not.</p></div>
+                      <figure data-figma-node="96:2639"><img src="./assets/Exclusion/editorial/uyghur@3x.png" width="612" height="343" alt="Uyghur: a personal dictionary-style artwork reflecting on political suppression, identity and dark humour as a coping mechanism." loading="lazy" decoding="async"></figure>
+                    </div>
+                    <div class="exclusion-editorial-row">
+                      <div class="exclusion-copy"><h3>2.Privilege Hazard</h3><p>In Data Feminism, Catherine D’Ignazio and Lauren Klein describe the privilege hazard: those who experience the least friction in a system are often least able to recognize whom it excludes.</p><p>In my case, simply allowing one additional character in a name field could remove a barrier across many everyday services.</p></div>
+                      <figure data-figma-node="89:2457"><img src="./assets/Exclusion/editorial/privilege-hazard@3x.png" width="612" height="343" alt="Illustration of a rejected name form and a ghost labelled U+200F confronting a frustrated user." loading="lazy" decoding="async"></figure>
+                    </div>
+                    <div class="exclusion-editorial-row">
+                      <div class="exclusion-copy"><h3>3.Designing Beyond the Default</h3><p>Experiencing exclusion has made me question who gets treated as the “default user” in design.</p><p>It shaped my interest in social and participatory design, and taught me to pay attention to people and experiences that are often overlooked.</p><p>I believe people shouldn't have to change who they are to fit into a system. We should design systems that make room for them.</p></div>
+                      <figure data-figma-node="97:2777"><img src="./assets/Exclusion/editorial/beyond-default@3x.png" width="612" height="343" alt="A small white square labelled Default, surrounded by a larger black field." loading="lazy" decoding="async"></figure>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <button id="landing3042-exclusion-close" class="exclusion-close" type="button" aria-label="Close Exclusion view"><img src="./assets/Exclusion/editorial/close.svg" alt="" decoding="async"></button>
             </section>
+
           </div>
 
           <img
@@ -344,23 +212,23 @@
               decoding="async"
               aria-hidden="true"
             />
-            <button
-              type="button"
-              class="landing3042-bubble-button landing3042-bubble-studio"
-              data-trigger="studio"
-              aria-controls="landing3042-studio-inline"
-              aria-expanded="false"
-              aria-label="Open my studio"
+            <a
+              class="landing3042-bubble-button landing3042-bubble-studio landing3042-archive-link"
+              href="https://archive.oghuzhan.work/" target="_blank" rel="noopener noreferrer"
+              data-external-preview-title="Prototype Lab — Archive"
+              data-external-preview-icon="https://archive.oghuzhan.work/assets/icon.png"
+              data-external-textfx-disabled
+              aria-label="This is my prototypes"
             >
               <img
                 class="landing3042-bubble-art"
-                src="./assets/Landingpage/Studio.svg"
+                src="./assets/Landingpage/Archive-bubble.svg"
                 alt=""
                 loading="eager"
                 decoding="async"
                 aria-hidden="true"
               />
-            </button>
+            </a>
           </section>
 
           <button class="landing3042-practice-cta" type="button" data-trigger="practice" aria-label="Scroll to My Work section">
@@ -460,9 +328,9 @@
               <div class="mypractice-map-overlay" aria-hidden="true">
                 <figure
                   class="mypractice-map-overlay-item"
-                  data-node-id="3139:17651"
-                  data-project-name="Woodpecker"
-                  style="--x: 6765; --y: 176; --w: 1168; --h: 584; --col: 20; --row: 2; --col-mobile: 17; --row-mobile: 4; --w-span: 2; --h-span: 3;"
+                  data-node-id="norrtag"
+                  data-project-name="Everyone's on Board"
+                  style="--work-col: 21; --work-row: 7; --x: 6765; --y: 2085; --w: 1168; --h: 584; --col: 20; --row: 12; --col-mobile: 20; --row-mobile: 23; --w-span: 2; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
@@ -470,13 +338,27 @@
                     <i class="mypractice-map-block" style="--cx:1;--cy:1;"></i>
                     <i class="mypractice-map-block" style="--cx:1;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-107.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/projects/norrtag/cover/figma-hero-512.webp" alt="" loading="lazy" decoding="async" /></span>
+                </figure>
+                <figure
+                  class="mypractice-map-overlay-item"
+                  data-node-id="3139:17651"
+                  data-project-name="Woodpecker"
+                  style="--work-col: 21; --work-row: 1; --x: 6765; --y: 176; --w: 1168; --h: 584; --col: 20; --row: 2; --col-mobile: 17; --row-mobile: 4; --w-span: 2; --h-span: 3;"
+                >
+                  <span class="mypractice-map-blocks">
+                    <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
+                    <i class="mypractice-map-block" style="--cx:0;--cy:1;"></i>
+                    <i class="mypractice-map-block" style="--cx:1;--cy:1;"></i>
+                    <i class="mypractice-map-block" style="--cx:1;--cy:2;"></i>
+                  </span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-107.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3150:21735"
                   data-project-name="OpenTraces"
-                  style="--x: 8278; --y: 445; --w: 1168; --h: 584; --col: 25; --row: 4; --col-mobile: 19; --row-mobile: 8; --w-span: 2; --h-span: 5;"
+                  style="--work-col: 25; --work-row: 1; --x: 8278; --y: 445; --w: 1168; --h: 584; --col: 25; --row: 4; --col-mobile: 19; --row-mobile: 8; --w-span: 2; --h-span: 5;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:1;--cy:0;"></i>
@@ -486,13 +368,13 @@
                     <i class="mypractice-map-block" style="--cx:0;--cy:3;"></i>
                     <i class="mypractice-map-block" style="--cx:0;--cy:4;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-948.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-948.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21709"
                   data-project-name="Veritas"
-                  style="--x: 6059; --y: 2085; --w: 1168; --h: 584; --col: 13; --row: 12; --col-mobile: 12; --row-mobile: 23; --w-span: 5; --h-span: 2;"
+                  style="--work-col: 12; --work-row: 9; --x: 6059; --y: 2085; --w: 1168; --h: 584; --col: 13; --row: 12; --col-mobile: 12; --row-mobile: 23; --w-span: 5; --h-span: 2;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
@@ -502,13 +384,13 @@
                     <i class="mypractice-map-block" style="--cx:4;--cy:0;"></i>
                     <i class="mypractice-map-block" style="--cx:4;--cy:1;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-941.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-941.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21710"
                   data-project-name="LoomDrift"
-                  style="--x: 4354; --y: 1590; --w: 1168; --h: 584; --col: 13; --row: 9; --col-mobile: 13; --row-mobile: 20; --w-span: 3; --h-span: 3;"
+                  style="--work-col: 12; --work-row: 7; --x: 4354; --y: 1590; --w: 1168; --h: 584; --col: 13; --row: 9; --col-mobile: 13; --row-mobile: 20; --w-span: 3; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
@@ -517,13 +399,13 @@
                     <i class="mypractice-map-block" style="--cx:1;--cy:1;"></i>
                     <i class="mypractice-map-block" style="--cx:1;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-945.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-945.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21711"
                   data-project-name="BottleU"
-                  style="--x: 7631; --y: 1465; --w: 1168; --h: 584; --col: 23; --row: 8; --col-mobile: 18; --row-mobile: 12; --w-span: 3; --h-span: 3;"
+                  style="--work-col: 22; --work-row: 9; --x: 7631; --y: 1465; --w: 1168; --h: 584; --col: 23; --row: 8; --col-mobile: 18; --row-mobile: 12; --w-span: 3; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
@@ -532,26 +414,26 @@
                     <i class="mypractice-map-block" style="--cx:0;--cy:1;"></i>
                     <i class="mypractice-map-block" style="--cx:0;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-944.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-944.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21712"
                   data-project-name="SliceWardrobe"
-                  style="--x: 2389; --y: 2085; --w: 1168; --h: 584; --col: 8; --row: 10; --col-mobile: 10; --row-mobile: 20; --w-span: 1; --h-span: 3;"
+                  style="--work-col: 8; --work-row: 7; --x: 2389; --y: 2085; --w: 1168; --h: 584; --col: 8; --row: 10; --col-mobile: 10; --row-mobile: 20; --w-span: 1; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
                     <i class="mypractice-map-block" style="--cx:0;--cy:1;"></i>
                     <i class="mypractice-map-block" style="--cx:0;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-943.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-943.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21713"
                   data-project-name="PaperMind"
-                  style="--x: 2527; --y: 960; --w: 1168; --h: 584; --col: 6; --row: 3; --col-mobile: 7; --row-mobile: 8; --w-span: 3; --h-span: 3;"
+                  style="--work-col: 3; --work-row: 2; --x: 2527; --y: 960; --w: 1168; --h: 584; --col: 6; --row: 3; --col-mobile: 7; --row-mobile: 8; --w-span: 3; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:1;--cy:0;"></i>
@@ -560,13 +442,13 @@
                     <i class="mypractice-map-block" style="--cx:2;--cy:1;"></i>
                     <i class="mypractice-map-block" style="--cx:1;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-942.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-942.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3150:21733"
                   data-project-name="MakkaPakka"
-                  style="--x: 4469; --y: 749; --w: 1168; --h: 584; --col: 12; --row: 4; --col-mobile: 12; --row-mobile: 12; --w-span: 3; --h-span: 3;"
+                  style="--work-col: 10; --work-row: 2; --x: 4469; --y: 749; --w: 1168; --h: 584; --col: 12; --row: 4; --col-mobile: 12; --row-mobile: 12; --w-span: 3; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
@@ -575,13 +457,13 @@
                     <i class="mypractice-map-block" style="--cx:1;--cy:2;"></i>
                     <i class="mypractice-map-block" style="--cx:2;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-946.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-946.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3150:21734"
                   data-project-name="Eco-Mailbox"
-                  style="--x: 6059; --y: 846; --w: 1168; --h: 584; --col: 19; --row: 4; --col-mobile: 15; --row-mobile: 7; --w-span: 2; --h-span: 3;"
+                  style="--work-col: 20; --work-row: 2; --x: 6059; --y: 846; --w: 1168; --h: 584; --col: 19; --row: 4; --col-mobile: 15; --row-mobile: 7; --w-span: 2; --h-span: 3;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
@@ -590,42 +472,42 @@
                     <i class="mypractice-map-block" style="--cx:1;--cy:1;"></i>
                     <i class="mypractice-map-block" style="--cx:1;--cy:2;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-947.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-947.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21718"
                   data-project-name="EasyFlow"
-                  style="--x: 479; --y: 2891; --w: 585.49169921875; --h: 584; --col: 4; --row: 19; --col-mobile: 5; --row-mobile: 28; --w-span: 1; --h-span: 1;"
+                  style="--work-col: 1; --work-row: 11; --x: 479; --y: 2891; --w: 585.49169921875; --h: 584; --col: 4; --row: 19; --col-mobile: 5; --row-mobile: 28; --w-span: 1; --h-span: 1;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/image-1.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/image-1.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3139:21719"
                   data-project-name="Flexit"
-                  style="--x: 1177; --y: 2553; --w: 584; --h: 584; --col: 5; --row: 17; --col-mobile: 6; --row-mobile: 27; --w-span: 2; --h-span: 1;"
+                  style="--work-col: 3; --work-row: 10; --x: 1177; --y: 2553; --w: 584; --h: 584; --col: 5; --row: 17; --col-mobile: 6; --row-mobile: 27; --w-span: 2; --h-span: 1;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
                     <i class="mypractice-map-block" style="--cx:1;--cy:0;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/rectangle-4127.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/rectangle-4127.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
                 <figure
                   class="mypractice-map-overlay-item"
                   data-node-id="3150:21732"
                   data-project-name="CIY"
-                  style="--x: 1873; --y: 2891; --w: 584; --h: 584; --col: 6; --row: 16; --col-mobile: 8; --row-mobile: 25; --w-span: 1; --h-span: 2;"
+                  style="--work-col: 4; --work-row: 9; --x: 1873; --y: 2891; --w: 584; --h: 584; --col: 6; --row: 16; --col-mobile: 8; --row-mobile: 25; --w-span: 1; --h-span: 2;"
                 >
                   <span class="mypractice-map-blocks">
                     <i class="mypractice-map-block" style="--cx:0;--cy:0;"></i>
                     <i class="mypractice-map-block" style="--cx:0;--cy:1;"></i>
                   </span>
-                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" src="./assets/figma-3139-map/rectangle-4128.png" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="mypractice-map-overlay-thumb-host"><img class="mypractice-map-overlay-thumb" data-map-thumbnail-src="./assets/figma-3139-map/rectangle-4128.png" alt="" loading="lazy" decoding="async" /></span>
                 </figure>
               </div>
             </div>
@@ -648,10 +530,18 @@
           <span class="mypractice-map-axis-arrow mypractice-map-axis-arrow--bottom"></span>
         </div>
 
-        <i class="mypractice-map-corner mypractice-map-corner--top" aria-hidden="true"></i>
-        <i class="mypractice-map-corner mypractice-map-corner--left" aria-hidden="true"></i>
-        <i class="mypractice-map-corner mypractice-map-corner--right" aria-hidden="true"></i>
-        <i class="mypractice-map-corner mypractice-map-corner--bottom" aria-hidden="true"></i>
+        <div class="work-map-help">
+          <button class="work-map-help-button" type="button" aria-label="About the My Work map" aria-controls="work-map-help-panel" aria-expanded="false"><img src="./assets/MyPractice/map-guide/help.svg" width="51" height="51" alt=""></button>
+          <div class="work-map-help-panel" id="work-map-help-panel" hidden aria-label="My Work map guide">
+            <button class="work-map-help-close" type="button" aria-label="Close map guide">×</button>
+            <div class="work-map-help-copy">
+              <p><span>Pick your lens.</span> Social, Interaction, or Service.</p>
+              <p><span>1–4?</span> My priorities in each field. 1 is top of the list!</p>
+              <p><span>Curious?</span> Click a square and see what's inside.</p>
+            </div>
+          </div>
+        </div>
+
         <section id="map-project-inline-shell" class="map-project-inline-shell" hidden aria-hidden="true">
           <div id="map-project-inline-scroll" class="map-project-inline-scroll">
             <article class="map-project-inline-content map-project-detail-page" aria-live="polite">
@@ -888,7 +778,7 @@
                               class="map-project-detail-section-c-finding-panel-video"
                               controls
                               playsinline
-                              preload="metadata"
+                              preload="none"
                               src="https://assets.oghuzhan.work/concept%40v.mp4"
                               poster="./assets/Veritas/concept-v-poster.jpg"
                             ></video>
@@ -931,7 +821,7 @@
                               class="map-project-detail-section-c-finding-panel-video"
                               controls
                               playsinline
-                              preload="metadata"
+                              preload="none"
                               src="https://assets.oghuzhan.work/4cf5374756a18a48d56d75562d991f12bb829184.mov"
                               poster="./assets/Veritas/c-relationship-poster.jpg"
                             ></video>
@@ -986,7 +876,7 @@
                           src="https://assets.oghuzhan.work/12%E6%9C%8818%E6%97%A5%20(2).mp4"
                           playsinline
                           muted
-                          preload="metadata"
+                          preload="none"
                           aria-hidden="false"
                         ></video>
                         <video
@@ -994,7 +884,7 @@
                           src="https://assets.oghuzhan.work/SaveSetup.mp4"
                           playsinline
                           muted
-                          preload="metadata"
+                          preload="none"
                           aria-hidden="true"
                         ></video>
                         <video
@@ -1002,7 +892,7 @@
                           src="https://assets.oghuzhan.work/Screen%20Recording%202025-12-18%20at%2005.36.47.mov"
                           playsinline
                           muted
-                          preload="metadata"
+                          preload="none"
                           aria-hidden="true"
                         ></video>
                         <img
@@ -1208,7 +1098,7 @@
                     <p class="map-project-detail-section-c-research-link-wrap">
                       <a
                         class="map-project-detail-section-c-research-link external-link-hoverfx"
-                        href="https://oghuz.notion.site/Interfacing-with-an-Analytical-Actor-Designing-Human-AI-Relations-in-Law-Enforcement-Visual-Investi-32533fe30b9680a5b787ee2589efa3b7?source=copy_link"
+                        href="https://blog.oghuzhan.work/writing/interfacing-with-an-analytical-actor/"
                         target="_blank"
                         rel="noopener noreferrer"
                       >Research Paper &amp; Reflection of this project</a>
@@ -1250,6 +1140,7 @@
                 </div>
               </section>
               </section>
+              <section id="map-project-norrtag-root" class="norrtag-detail" hidden aria-hidden="true"></section>
               <section id="map-project-template-root" class="map-project-template-root" hidden aria-hidden="true"></section>
               <section id="map-project-opentrace-root" class="map-project-opentrace-root" hidden aria-hidden="true"></section>
             </article>
@@ -1310,75 +1201,6 @@
     </div>
   </section>
 
-  <section id="studio-modal" class="landing3042-modal" role="dialog" aria-modal="true" aria-labelledby="studio-modal-title" aria-hidden="true" hidden>
-    <div class="landing3042-modal-dialog landing3042-modal-dialog-studio" data-modal-panel>
-      <button class="landing3042-modal-close" type="button" data-modal-close aria-label="Close Studio modal">
-        <img
-          class="landing3042-modal-close-icon"
-          src="./assets/Veritas/veritas-detail-close.svg"
-          alt=""
-          loading="eager"
-          decoding="async"
-        />
-      </button>
-      <div class="gan3042-head">
-        <h2 id="studio-modal-title" class="hero3042-title" data-copy-key="shared.home.left.gan.heading">gan studio</h2>
-      </div>
-
-      <div class="gan3042-logo-carousel" aria-label="GAN logo slideshow">
-        <img
-          class="gan3042-logo-slide gan3042-logo-slide-1"
-          alt="GAN logo variation 1"
-          src="./assets/GanStudio/gan1.png"
-          loading="eager"
-          decoding="async"
-        />
-        <img
-          class="gan3042-logo-slide gan3042-logo-slide-2"
-          alt="GAN logo variation 2"
-          src="./assets/GanStudio/gan2.png"
-          loading="eager"
-          decoding="async"
-        />
-        <img
-          class="gan3042-logo-slide gan3042-logo-slide-3"
-          alt="GAN logo variation 3"
-          src="./assets/GanStudio/gan3.png"
-          loading="eager"
-          decoding="async"
-        />
-        <img
-          class="gan3042-logo-slide gan3042-logo-slide-4"
-          alt="GAN logo variation 4"
-          src="./assets/GanStudio/gan4.png"
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-
-      <p class="gan3042-subtitle" data-copy-key="shared.home.left.gan.subtitle" data-copy-mode="html">A place for both local connections and creative experiments.</p>
-
-      <h2 class="gan3042-project-title">🚧 gan project 🚧</h2>
-
-      <div class="gan3042-project-row">
-        <a class="gan3042-project-link" data-studio-project-link href="./overlay-minimovesmatter.html" data-copy-key="shared.home.left.projects.minimoves">Mini Moves Matter</a>
-        <a class="gan3042-project-more" data-studio-project-more href="./overlay-minimovesmatter.html" data-copy-key="shared.home.left.cta.seemore">See More</a>
-      </div>
-      <div class="gan3042-project-row">
-        <a class="gan3042-project-link" data-studio-project-link href="./overlay-sustainableWaves.html" data-copy-key="shared.home.left.projects.sustainable">Sustainable Waves</a>
-        <a class="gan3042-project-more" data-studio-project-more href="./overlay-sustainableWaves.html" data-copy-key="shared.home.left.cta.seemore">See More</a>
-      </div>
-      <div class="gan3042-project-row">
-        <a class="gan3042-project-link" data-studio-project-link href="./overlay-shanghaisummerschool.html" data-copy-key="shared.home.left.projects.summerschool">SJTU X SUTD Joint Shanghai Summer School</a>
-        <a class="gan3042-project-more" data-studio-project-more href="./overlay-shanghaisummerschool.html" data-copy-key="shared.home.left.cta.seemore">See More</a>
-      </div>
-
-      <h2 class="gan3042-writing">
-        <a data-href-key="link.writing.samples" href="https://oghuz.notion.site/writing-samples?pvs=74" target="_blank" rel="noopener noreferrer">✍️ <span data-copy-key="shared.home.left.writing.samples">Writing Samples</span> ✍️</a>
-      </h2>
-    </div>
-  </section>
-
   <template id="open-traces-template">
     <section class="practice3042-open-traces" aria-label="Open Traces featured video">
       <div class="practice3042-open-traces-header">
@@ -1420,11 +1242,6 @@
     </section>
   </template>
 
-  <div id="project-hover-preview" aria-hidden="true">
-    <div class="project-hover-body">
-      <img id="project-hover-preview-img" class="project-hover-image" alt="" loading="lazy" decoding="async" />
-    </div>
-  </div>
   <div id="map-center-hover-preview" aria-hidden="true" hidden>
     <figure class="map-center-hover-preview-frame">
       <div
@@ -1489,146 +1306,22 @@
     </div>
   </div>
 
-  <section id="project-inline-shell" class="project-inline-shell" hidden aria-hidden="true">
-    <button id="project-inline-close" class="project-inline-close" type="button" aria-label="Back to gan studio">
-      <img
-        class="map-project-inline-close-icon"
-        src="./assets/GanStudio/gan-studio-close.svg?v=20260403-2"
-        alt=""
-        loading="eager"
-        decoding="async"
-        aria-hidden="true"
-      />
-    </button>
-    <div class="project-inline-canvas">
-      <h1 class="hero3042-title project-inline-home-title">gan studio</h1>
-      <article class="project-inline-page project-inline-page-minimoves" data-project-page="minimoves" hidden aria-labelledby="project-inline-title-minimoves">
-        <header class="project-inline-hero project-inline-hero-lime project-minimoves-header">
-          <h1 id="project-inline-title-minimoves" class="project-inline-title project-minimoves-title">Mini Moves Matter <span aria-hidden="true">🏃‍➡️</span></h1>
-          <p class="project-inline-kicker project-minimoves-kicker">Sustainability x Movement</p>
-          <p class="project-inline-date project-minimoves-date">Jul.2024 - Present</p>
-        </header>
 
-        <section class="project-inline-section project-inline-col-full project-minimoves-intro-row">
-          <figure class="project-minimoves-intro-mark">
-            <img src="./assets/minimoves-figma-visual-mark.png" alt="Mini Moves Matter visual mark" loading="lazy" decoding="async" />
-          </figure>
-          <p class="project-minimoves-intro-copy">Mini Moves Matter is a series of initiatives exploring how movement culture can intersect with sustainability. Rather than treating sustainability as an abstract concept, the project experiments with ways to integrate sustainable practices into existing sports communities and everyday movement habits.</p>
-        </section>
-
-        <section class="project-inline-section project-inline-col-full project-minimoves-feature-row">
-          <figure class="project-minimoves-feature-media">
-            <img src="./assets/minimoves-figma-feature-1.png" alt="Mini Moves Matter feature poster 1" loading="lazy" decoding="async" />
-          </figure>
-          <figure class="project-minimoves-feature-media">
-            <img src="./assets/minimoves-figma-feature-2.png" alt="Mini Moves Matter feature poster 2" loading="lazy" decoding="async" />
-          </figure>
-          <p class="project-minimoves-feature-copy">By collaborating with different activity groups, the project investigates how shared movement experiences can become entry points for environmental and social action. For example, paddleboarding communities become spaces for collecting marine litter, and other events explore how movement can bring people together to form social innovation communities.</p>
-        </section>
-
-        <section class="project-inline-section project-inline-col-full project-minimoves-gallery-row">
-          <figure><img src="./assets/minimoves-figma-gallery-1.png" alt="Mini Moves Matter gallery visual 1" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/minimoves-figma-gallery-2.png" alt="Mini Moves Matter gallery visual 2" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/minimoves-figma-gallery-3.png" alt="Mini Moves Matter gallery visual 3" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/minimoves-figma-gallery-4.png" alt="Mini Moves Matter gallery visual 4" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/minimoves-figma-gallery-5.png" alt="Mini Moves Matter gallery visual 5" loading="lazy" decoding="async" /></figure>
-        </section>
-
-        <section class="project-inline-section project-inline-col-full project-minimoves-closing-row">
-          <p>Through these experiments, movement becomes more than physical activity. It acts as a bridge that connects individuals, communities, and environmental awareness, creating opportunities for people to practice sustainability together through everyday actions.</p>
-        </section>
-      </article>
-
-      <article class="project-inline-page project-inline-page-sustainable" data-project-page="sustainable" hidden aria-labelledby="project-inline-title-sustainable">
-        <section class="project-sustainable-stage" aria-label="Sustainable Waves project body">
-          <header class="project-inline-hero project-inline-hero-cyan project-sustainable-header">
-            <h1 id="project-inline-title-sustainable" class="project-inline-title project-sustainable-title">Sustainable Waves <span aria-hidden="true">🌊</span></h1>
-            <p class="project-inline-date project-sustainable-date">Sept.2024 - Present</p>
-            <p class="project-inline-kicker project-sustainable-kicker">Sustainability x Movement</p>
-          </header>
-
-          <section class="project-sustainable-intro-band">
-            <figure class="project-sustainable-poster">
-              <img src="./assets/p21.png" alt="Sustainable Waves launch visual" loading="lazy" decoding="async" />
-            </figure>
-            <p class="project-sustainable-paragraph">Together with Mini Moves Matter and How Bottle, we launched the Sustainable Waves Initiative&#8212;where water sports meet ocean care. The program attracted over 10 partner brands, offering participants unique rewards such as 3D-printed souvenirs made from recycled plastic and handcrafted litter grabbers created from reclaimed fishing nets.</p>
-          </section>
-
-          <section class="project-sustainable-gallery-stage" aria-label="Sustainable Waves image gallery">
-            <div class="project-sustainable-gallery-row project-sustainable-gallery-row-a">
-              <figure class="project-sustainable-tile project-sustainable-tile-1162"><img src="./assets/sustainable-frame-1312317492.png" alt="Sustainable Waves visual 1" loading="lazy" decoding="async" /></figure>
-              <figure class="project-sustainable-tile project-sustainable-tile-1163"><img src="./assets/sustainable-frame-1312317496.png" alt="Sustainable Waves visual 2" loading="lazy" decoding="async" /></figure>
-              <figure class="project-sustainable-tile project-sustainable-tile-1168"><img src="./assets/sustainable-frame-1312317497.png" alt="Sustainable Waves visual 3" loading="lazy" decoding="async" /></figure>
-            </div>
-            <div class="project-sustainable-gallery-row project-sustainable-gallery-row-b">
-              <figure class="project-sustainable-tile project-sustainable-tile-1167"><img src="./assets/su3.png" alt="Sustainable Waves visual 4" loading="lazy" decoding="async" /></figure>
-              <figure class="project-sustainable-tile project-sustainable-tile-1170"><img src="./assets/sustainable-frame-1312317495.png" alt="Sustainable Waves visual 5" loading="lazy" decoding="async" /></figure>
-              <figure class="project-sustainable-tile project-sustainable-tile-0862"><img src="./assets/sustainable-sop-001.png" alt="Sustainable Waves visual 6" loading="lazy" decoding="async" /></figure>
-            </div>
-          </section>
-
-          <section class="project-inline-section project-sustainable-scroll-column">
-            <div class="project-sustainable-scroll-window" id="project-sustainable-scroll-window">
-              <figure class="project-sustainable-scroll-figure">
-                <img src="./assets/long.png" alt="Sustainable Waves long visual board" loading="lazy" decoding="async" />
-              </figure>
-            </div>
-          </section>
-        </section>
-      </article>
-
-      <article class="project-inline-page project-inline-page-summerschool" data-project-page="summerschool" hidden aria-labelledby="project-inline-title-summerschool">
-        <header class="project-inline-hero project-inline-hero-rose project-summerschool-header">
-          <h1 id="project-inline-title-summerschool" class="project-inline-title project-summerschool-title">Shanghai Summer School <span aria-hidden="true">🍎</span></h1>
-          <div class="project-summerschool-date-row">
-            <p class="project-inline-date project-summerschool-date">Jul.2024 - Present</p>
-            <figure class="project-summerschool-language-board">
-              <img src="./assets/summerschool-figma-visual-language-board.png" alt="Shanghai Summer School visual language board" loading="lazy" decoding="async" />
-            </figure>
-          </div>
-          <p class="project-inline-kicker project-summerschool-kicker">SJTU x SUTD Joint Summer School Program</p>
-        </header>
-
-        <figure class="project-summerschool-preview">
-          <img src="./assets/summerschool-figma-design-system-preview.png" alt="Shanghai Summer School design system preview" loading="lazy" decoding="async" />
-        </figure>
-
-        <section class="project-inline-section project-summerschool-intro">
-          <p>This year&apos;s Shanghai Summer School focused on the theme of healthy aging. To align with this, our design centered on representing health in an engaging and relatable way.</p>
-          <p>We decided to continue the approach from the previous year, using apples as the focal point of our concept.</p>
-          <p>The phrase &quot;an apple a day keeps the doctor away&quot; is a shared symbol of health across many cultures, making it a perfect fit for the multicultural environment of the international summer camp.</p>
-        </section>
-
-        <section class="project-summerschool-row project-summerschool-row-1" aria-label="Shanghai Summer School design row 1">
-          <figure><img src="./assets/summerschool-figma-row1-card-a.png" alt="Shanghai Summer School card visual A" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-row1-card-b.png" alt="Shanghai Summer School card visual B" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-row1-card-c.png" alt="Shanghai Summer School card visual C" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-design-1.png" alt="Shanghai Summer School design visual 1" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-design-2.png" alt="Shanghai Summer School design visual 2" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-design-3.png" alt="Shanghai Summer School design visual 3" loading="lazy" decoding="async" /></figure>
-        </section>
-
-        <figure class="project-summerschool-row2">
-          <img src="./assets/summerschool-figma-row2-composite.png" alt="Shanghai Summer School badge and schedule row" loading="lazy" decoding="async" />
-        </figure>
-
-        <section class="project-summerschool-row project-summerschool-row-3" aria-label="Shanghai Summer School implementation row">
-          <figure><img src="./assets/summerschool-figma-implement-1.png" alt="Shanghai Summer School on-site visual 1" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-implement-2.png" alt="Shanghai Summer School on-site visual 2" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-implement-3.png" alt="Shanghai Summer School on-site visual 3" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-implement-4.png" alt="Shanghai Summer School on-site visual 4" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-implement-5.png" alt="Shanghai Summer School on-site visual 5" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-implement-6.png" alt="Shanghai Summer School on-site visual 6" loading="lazy" decoding="async" /></figure>
-          <figure><img src="./assets/summerschool-figma-implement-7.png" alt="Shanghai Summer School on-site visual 7" loading="lazy" decoding="async" /></figure>
-        </section>
-
-      </article>
-    </div>
-  </section>
 
   <script src="./content.shared.js?v=20260402-3" defer></script>
   <script src="./content.apply.shared.js" defer></script>
   <script src="./custom-cursor.js" defer></script>
+  <link rel="stylesheet" href="./norrtag.css" />
+  <script src="./norrtag.media.js" defer></script>
+  <script src="./norrtag.content.js" defer></script>
+  <script src="./project-media.js" defer></script>
+  <script src="./norrtag.js" defer></script>
+  <link rel="stylesheet" href="./portfolio-reader.css" />
+  <script src="./portfolio-reader.js" defer></script>
+  <link rel="stylesheet" href="./exclusion.css" />
+  <script src="./exclusion.js" defer></script>
   <script src="./responsive.shared.js?v=20261009-opentrace-hidden" defer></script>
+  <!-- Load the capture helper only for explicit Figma export URLs. -->
+  <script>if(location.hash.includes('figmacapture=')){var figmaCaptureScript=document.createElement('script');figmaCaptureScript.src='https://mcp.figma.com/mcp/html-to-design/capture.js';figmaCaptureScript.async=true;document.head.append(figmaCaptureScript);}</script>
 </body>
 </html>

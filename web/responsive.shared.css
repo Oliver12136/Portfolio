@@ -2,6 +2,12 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
+/* Preserve media proportions when both dimensions are constrained. */
+:where(img, video) { object-fit: contain; }
+media-item[image-fit="stretch"]::part(media),
+media-item[image-fit="stretch"]::part(video),
+media-item[image-fit="stretch"]::part(poster) { object-fit: contain; }
+
 :root {
   --layout-left-pct: 20;
   --layout-right-pct: 80;
@@ -60,9 +66,7 @@
   html[data-site-mode="figma3042"] #homepage---left .landing3042-header *,
   html[data-site-mode="figma3042"] #homepage---left .landing3042-email-link,
   html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-inline,
-  html[data-site-mode="figma3042"] #homepage---left .landing3042-studio-inline,
-  html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close,
-  html[data-site-mode="figma3042"] #homepage---left .landing3042-studio-close {
+  html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close{
     pointer-events: auto !important;
   }
 
@@ -83,33 +87,6 @@
     max-width: 1512px !important;
     margin-left: auto !important;
     margin-right: auto !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left.hero3042 {
-    width: 100vw !important;
-    height: var(--min-viewport-height, 100vh) !important;
-    min-height: var(--min-viewport-height, 100vh) !important;
-    max-height: var(--min-viewport-height, 100vh) !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .hero3042-canvas {
-    width: 100% !important;
-    max-width: none !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    aspect-ratio: auto !important;
-    margin: 0 !important;
-    position: relative !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-stage {
-    position: relative !important;
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
   }
 
   html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepage---left .landing3042-header {
@@ -213,29 +190,6 @@
     transform: none !important;
     opacity: 1 !important;
     z-index: 9 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-inline {
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 6 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-close {
-    display: flex !important;
-    pointer-events: auto !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-close::before,
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-close::after {
-    content: none !important;
-    display: none !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-close:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
   }
 
   html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepage---left .landing3042-exclusion-close::before,
@@ -967,9 +921,7 @@ h9 {
   letter-spacing: 0 !important;
   display: block !important;
   font-variation-settings: "slnt" 0, "MONO" 1 !important;
-}
-
-/* Namecard back text follows gan3042-subtitle typography, keeps white color */
+} keeps white color */
 .namecard-back-text {
   margin: 0;
   font-family: var(--typo-latin-family) !important;
@@ -3954,29 +3906,8 @@ html[data-site-mode="figma3042"] .landing3042-exclusion-inline {
   pointer-events: none;
 }
 
-html[data-site-mode="figma3042"] .landing3042-studio-inline {
-  position: absolute;
-  left: var(--landing-studio-inline-left, var(--landing-exclusion-inline-left));
-  top: var(--landing-studio-inline-top, var(--landing-exclusion-inline-top));
-  right: var(--landing-studio-inline-right, var(--landing-exclusion-inline-right));
-  bottom: var(--landing-studio-inline-bottom, var(--landing-exclusion-inline-bottom));
-  z-index: 4;
-  display: none;
-  overflow: visible;
-  pointer-events: none;
-}
-
 @media (min-width: 768px) {
   html[data-site-mode="figma3042"] .landing3042-exclusion-inline {
-    left: 4.5139%;
-    top: 18.2%;
-    right: auto;
-    bottom: auto;
-    width: 95.2083%;
-    height: 63.9%;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-inline {
     left: 4.5139%;
     top: 18.2%;
     right: auto;
@@ -3988,11 +3919,6 @@ html[data-site-mode="figma3042"] .landing3042-studio-inline {
 
 @media (min-width: 768px) and (max-height: 820px) {
   html[data-site-mode="figma3042"] .landing3042-exclusion-inline {
-    top: 22.6%;
-    height: 62.6%;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-inline {
     top: 22.6%;
     height: 62.6%;
   }
@@ -4009,329 +3935,6 @@ html[data-site-mode="figma3042"] .landing3042-exclusion-panel {
   background: none;
   overflow: visible;
   box-sizing: border-box;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-panel {
-  display: flex;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  overflow: hidden;
-  box-sizing: border-box;
-  justify-content: center;
-  align-items: stretch;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-surface {
-  --landing-studio-close-right: clamp(28px, 4.6vw, 76.003125px);
-  --landing-studio-close-top: clamp(18px, 2vw, 26.998125px);
-  --landing-studio-close-size: 41px;
-  --landing-studio-header-close-gap: 20px;
-  --landing-studio-height-reference: 771px;
-  --landing-studio-height-delta: calc(var(--min-viewport-height, 100vh) - var(--landing-studio-height-reference));
-  --landing-studio-surface-bottom-gap-fluid: clamp(
-    96px,
-    calc(111.795px - (var(--landing-studio-height-delta) * 0.1014)),
-    132px
-  );
-  --landing-studio-main-top-gap-fluid: clamp(
-    42px,
-    calc(130px + (var(--landing-studio-height-delta) * 1.2394)),
-    176px
-  );
-  --landing-studio-projects-gap-fluid: clamp(
-    14px,
-    calc(21.588px + (var(--landing-studio-height-delta) * 0.1069)),
-    40px
-  );
-  --landing-studio-project-list-gap-fluid: clamp(
-    8px,
-    calc(11.565px + (var(--landing-studio-height-delta) * 0.0502)),
-    20px
-  );
-  --landing-studio-writing-top-gap-fluid: clamp(
-    16px,
-    calc(130px + (var(--landing-studio-height-delta) * 1.4648)),
-    184px
-  );
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: min(100%, 1512px) !important;
-  max-width: 1512px !important;
-  height: 100% !important;
-  max-height: none !important;
-  margin: 0 !important;
-  padding:
-    clamp(12px, 1.15vw, 18px)
-    clamp(28px, 4.6vw, 76.003125px)
-    var(--landing-studio-surface-bottom-gap-fluid)
-    clamp(28px, 4.8vw, 78.515625px) !important;
-  overflow: hidden !important;
-  box-sizing: border-box;
-  pointer-events: auto;
-  transform: none !important;
-  font-synthesis: none;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-surface h2,
-html[data-site-mode="figma3042"] .landing3042-studio-surface h3,
-html[data-site-mode="figma3042"] .landing3042-studio-surface p,
-html[data-site-mode="figma3042"] .landing3042-studio-surface a,
-html[data-site-mode="figma3042"] .landing3042-studio-surface span {
-  font-weight: 400 !important;
-  font-synthesis: none;
-  font-variation-settings: "wght" 400;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-header {
-  position: relative;
-  left: auto;
-  top: auto;
-  width: calc(
-    100% - var(--landing-studio-close-right) - var(--landing-studio-close-size) - var(--landing-studio-header-close-gap)
-  );
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(12px, 1.9vw, 20.344px);
-  flex: 0 0 auto;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-close {
-  position: absolute;
-  left: auto;
-  right: var(--landing-studio-close-right);
-  top: var(--landing-studio-close-top);
-  width: var(--landing-studio-close-size);
-  height: var(--landing-studio-close-size);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-close .map-project-inline-close-icon {
-  display: block;
-  width: 95.5%;
-  height: 95.5%;
-  margin: auto;
-  object-fit: contain;
-}
-
-html[data-site-mode="figma3042"] #homepage---left .landing3042-studio-title {
-  margin: 0;
-  color: rgba(0, 0, 0, 0.75);
-  font-family: "Atkinson Hyperlegible", sans-serif;
-  font-size: 52.5px !important;
-  font-weight: 400 !important;
-  line-height: 57.75px !important;
-  letter-spacing: 0;
-  white-space: nowrap;
-  font-variation-settings: "slnt" 0, "MONO" 0 !important;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-subtitle {
-  margin: 0;
-  color: #1b1b1b;
-  font-family: "Atkinson Hyperlegible", sans-serif;
-  font-size: 44.2px;
-  font-weight: 400 !important;
-  line-height: 53.04px;
-  letter-spacing: 0;
-  white-space: normal;
-  max-width: none;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-main {
-  position: relative;
-  left: auto;
-  top: auto;
-  width: min(957.12px, 100%);
-  margin-top: var(--landing-studio-main-top-gap-fluid);
-  display: grid;
-  grid-template-columns: clamp(132px, 14vw, 166.718px) minmax(0, 1fr);
-  column-gap: clamp(18px, 2.8vw, 35px);
-  align-items: start;
-  flex: 0 0 auto;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-logo-block {
-  margin: 0;
-  width: clamp(132px, 14vw, 166.718px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  display: block;
-  overflow: hidden;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-logo-carousel {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-logo-carousel .gan3042-logo-slide {
-  position: absolute;
-  inset: 0 auto auto 0;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: auto;
-  margin: 0;
-  max-width: none;
-  object-fit: initial;
-  object-position: center top;
-  transform: none;
-  opacity: 0;
-  animation-name: gan3042LogoFlash;
-  animation-duration: 3.2s;
-  animation-timing-function: steps(1, end);
-  animation-iteration-count: infinite;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-projects {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--landing-studio-projects-gap-fluid);
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-project-title {
-  margin: 0;
-  color: rgba(0, 0, 0, 0.75);
-  font-family: "Atkinson Hyperlegible", sans-serif;
-  font-size: 36px !important;
-  font-weight: 400 !important;
-  line-height: 31px !important;
-  letter-spacing: 0;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-project-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--landing-studio-project-list-gap-fluid);
-  width: 100%;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-project-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
-  column-gap: clamp(7px, 0.9vw, 12px);
-  align-items: start;
-  width: 100%;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-project-link,
-html[data-site-mode="figma3042"] .landing3042-studio-project-more,
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link {
-  color: #1b1b1b;
-  font-family: "Atkinson Hyperlegible", sans-serif;
-  font-size: 20px;
-  font-weight: 400 !important;
-  line-height: 25.515px;
-  letter-spacing: 0;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.16em;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-project-link,
-html[data-site-mode="figma3042"] .landing3042-studio-project-more {
-  display: inline-block;
-  width: fit-content;
-  max-width: 100%;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-project-link[data-copy-key="shared.home.left.projects.summerschool"] {
-  line-height: 24.494px;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-writing {
-  position: relative;
-  left: auto;
-  top: auto;
-  margin: 0;
-  margin-top: var(--landing-studio-writing-top-gap-fluid);
-  padding-top: 0;
-  flex: 0 0 auto;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link {
-  --external-link-fill: #111111;
-  --external-link-hover-fg: #ffffff;
-  color: rgba(0, 0, 0, 0.75);
-  font-size: 36px;
-  line-height: 31px;
-  text-decoration: none !important;
-  text-shadow: none !important;
-  -webkit-text-stroke: 0 transparent;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link > span {
-  display: inline-block;
-  color: inherit;
-  font-weight: 400 !important;
-  line-height: 31px;
-  text-decoration: none !important;
-  text-shadow: none !important;
-  -webkit-text-stroke: 0 transparent;
-  box-shadow: inset 0 -1px 0 0 currentColor;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link.external-link-hoverfx:hover,
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link.external-link-hoverfx:focus-visible {
-  color: #ffffff !important;
-}
-
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link.external-link-hoverfx:hover > span,
-html[data-site-mode="figma3042"] .landing3042-studio-writing-link.external-link-hoverfx:focus-visible > span {
-  color: #ffffff !important;
-  box-shadow: none !important;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  html[data-site-mode="figma3042"] .landing3042-studio-project-link:hover,
-  html[data-site-mode="figma3042"] .landing3042-studio-project-link:focus-visible,
-  html[data-site-mode="figma3042"] .landing3042-studio-project-more:hover,
-  html[data-site-mode="figma3042"] .landing3042-studio-project-more:focus-visible {
-    color: rgba(27, 27, 27, 0.72);
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023.98px) {
-  html[data-site-mode="figma3042"] .landing3042-studio-surface {
-    --landing-studio-close-right: clamp(28px, 4vw, 40px);
-    --landing-studio-close-top: clamp(16px, 2.2vw, 24px);
-    --landing-studio-close-size: 38px;
-    padding:
-      clamp(16px, 2.8vw, 22px)
-      clamp(28px, 4vw, 40px)
-      clamp(108px, 15vh, 130px)
-      clamp(28px, 4vw, 40px) !important;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-close {
-    right: var(--landing-studio-close-right);
-    top: var(--landing-studio-close-top);
-    width: var(--landing-studio-close-size);
-    height: var(--landing-studio-close-size);
-  }
 }
 
 html[data-site-mode="figma3042"] .landing3042-exclusion-a11y-title {
@@ -4898,9 +4501,7 @@ html[data-site-mode="figma3042"] .landing3042-exclusion-game-message {
 html[data-site-mode="figma3042"] .landing3042-bubbles[hidden],
 html[data-site-mode="figma3042"] .landing3042-logo[hidden],
 html[data-site-mode="figma3042"] .landing3042-exclusion-inline[hidden],
-html[data-site-mode="figma3042"] .landing3042-studio-inline[hidden],
-html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close[hidden],
-html[data-site-mode="figma3042"] #homepage---left .landing3042-studio-close[hidden] {
+html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close[hidden]{
   display: none !important;
 }
 
@@ -5167,10 +4768,6 @@ html[data-site-mode="figma3042"] .landing3042-modal-dialog-exclusion {
   width: min(calc(100vw - 2 * clamp(16px, 2.2vw, 30px)), 860px);
 }
 
-html[data-site-mode="figma3042"] .landing3042-modal-dialog-studio {
-  width: min(calc(100vw - 2 * clamp(16px, 2.2vw, 30px)), 1120px);
-}
-
 html[data-site-mode="figma3042"] .landing3042-modal-close {
   --landing-modal-close-base-size: var(--map-project-detail-close-default-size, 41px);
   --landing-modal-close-scale: 1;
@@ -5299,112 +4896,10 @@ html[data-site-mode="figma3042"] .landing3042-namecard-wrap .namecard-flip-inner
   aspect-ratio: 682.613 / 1106.402;
 }
 
-html[data-site-mode="figma3042"] .landing3042-modal-dialog-studio .gan3042-head {
-  margin-bottom: clamp(18px, 2.1vw, 28px);
-}
-
-html[data-site-mode="figma3042"] .landing3042-modal-dialog-studio .hero3042-title {
-  margin: 0;
-  font-size: clamp(42px, 3.4vw, 68px);
-  line-height: 0.98;
-}
-
-html[data-site-mode="figma3042"] .gan3042-logo-carousel {
-  position: relative;
-  width: 100%;
-  height: clamp(240px, 36vw, 420px);
-  margin-bottom: clamp(14px, 2vw, 22px);
-  overflow: hidden;
-}
-
-html[data-site-mode="figma3042"] .gan3042-logo-slide {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 74%;
-  height: 74%;
-  object-fit: contain;
-  object-position: center;
-  opacity: 0;
-  animation: gan3042LogoFlash 3.2s steps(1, end) infinite;
-}
-
-html[data-site-mode="figma3042"] .gan3042-logo-slide-1 {
-  animation-delay: 0s;
-}
-
-html[data-site-mode="figma3042"] .gan3042-logo-slide-2 {
-  animation-delay: 0.8s;
-}
-
-html[data-site-mode="figma3042"] .gan3042-logo-slide-3 {
-  animation-delay: 1.6s;
-}
-
-html[data-site-mode="figma3042"] .gan3042-logo-slide-4 {
-  animation-delay: 2.4s;
-}
-
-@keyframes gan3042LogoFlash {
-  0%,
-  24.99% {
-    opacity: 1;
-  }
-  25%,
-  100% {
-    opacity: 0;
-  }
-}
-
-html[data-site-mode="figma3042"] .gan3042-subtitle {
-  margin: 0 0 clamp(18px, 2.2vw, 26px) 0;
-  font-size: clamp(20px, 1.65vw, 28px);
-  line-height: 1.3;
-  color: rgba(27, 27, 27, 0.75);
-}
-
-html[data-site-mode="figma3042"] .gan3042-project-title {
-  margin: 0 0 12px 0;
-  font-size: clamp(32px, 2.5vw, 44px);
-  line-height: 1.1;
-  font-weight: 400;
-}
-
-html[data-site-mode="figma3042"] .gan3042-project-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
-  column-gap: 14px;
-  align-items: baseline;
-}
-
-html[data-site-mode="figma3042"] .gan3042-project-link,
-html[data-site-mode="figma3042"] .gan3042-project-more,
-html[data-site-mode="figma3042"] .gan3042-writing a {
-  color: #1b1b1b;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-html[data-site-mode="figma3042"] .gan3042-project-link,
-html[data-site-mode="figma3042"] .gan3042-project-more {
-  font-size: clamp(24px, 1.95vw, 34px);
-  line-height: 1.4;
-}
-
-html[data-site-mode="figma3042"] .gan3042-writing {
-  margin: 18px 0 0;
-  font-size: clamp(30px, 2.4vw, 42px);
-  line-height: 1.1;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  html[data-site-mode="figma3042"] .landing3042-bubble-button,
-  html[data-site-mode="figma3042"] .gan3042-logo-slide {
+  html[data-site-mode="figma3042"] .landing3042-bubble-button{
     animation: none !important;
     transform: none !important;
-  }
-  html[data-site-mode="figma3042"] .gan3042-logo-slide-1 {
-    opacity: 1 !important;
   }
 }
 
@@ -8416,7 +7911,7 @@ html[data-site-mode="figma3042"] .mypractice-map-overlay-item--crop-945 img {
   top: -30.3%;
   width: 132.83%;
   height: 141.26%;
-  object-fit: fill;
+  object-fit: cover;
 }
 
 html[data-site-mode="figma3042"] .mypractice-map-overlay-item--crop-944 img {
@@ -8424,7 +7919,7 @@ html[data-site-mode="figma3042"] .mypractice-map-overlay-item--crop-944 img {
   top: -24.39%;
   width: 149.57%;
   height: 154.1%;
-  object-fit: fill;
+  object-fit: cover;
 }
 
 html[data-site-mode="figma3042"] .mypractice-map-overlay-item[data-node-id="3139:21711"] img {
@@ -8456,7 +7951,7 @@ html[data-site-mode="figma3042"] .mypractice-map-overlay-item--crop-1 img {
   top: 0;
   width: 177.78%;
   height: 100%;
-  object-fit: fill;
+  object-fit: cover;
 }
 
 html[data-site-mode="figma3042"] .practice3042-open-traces {
@@ -8849,59 +8344,6 @@ html[data-site-mode="figma3042"] .sr-only {
     bottom: var(--landing-exclusion-mobile-locked-bottom, var(--landing-exclusion-inline-bottom));
   }
 
-  html[data-site-mode="figma3042"] .landing3042-studio-inline {
-    left: var(--landing-exclusion-inline-left);
-    right: var(--landing-exclusion-inline-right);
-    top: var(--landing-studio-mobile-locked-top, var(--landing-exclusion-inline-top));
-    bottom: var(--landing-studio-mobile-locked-bottom, var(--landing-exclusion-inline-bottom));
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-inline {
-    inset: 0 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-header {
-    position: absolute !important;
-    left: 4.9866% !important;
-    top: 8.5984% !important;
-    width: 72.4901% !important;
-    max-width: 72.4901% !important;
-    margin: 0 !important;
-    display: block !important;
-    z-index: 8 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-title {
-    margin: 0 !important;
-    color: rgba(0, 0, 0, 0.75) !important;
-    font-size: clamp(40px, 11.8vw, 58px) !important;
-    line-height: 1.04 !important;
-    font-weight: 400 !important;
-    letter-spacing: 0 !important;
-    white-space: normal !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-subtitle {
-    margin: clamp(8px, 2.2vw, 12px) 0 0 !important;
-    color: #1b1b1b !important;
-    font-size: clamp(19px, 5.65vw, 29px) !important;
-    line-height: 1.2 !important;
-    font-weight: 400 !important;
-    letter-spacing: 0 !important;
-    white-space: normal !important;
-    max-width: none !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-close {
-    position: absolute !important;
-    left: auto !important;
-    right: var(--landing-exclusion-close-right) !important;
-    top: var(--landing-exclusion-close-top) !important;
-    width: var(--landing-exclusion-close-size) !important;
-    height: var(--landing-exclusion-close-size) !important;
-    z-index: 9 !important;
-  }
-
   html[data-site-mode="figma3042"] body {
     overflow-x: hidden !important;
   }
@@ -9067,137 +8509,6 @@ html[data-site-mode="figma3042"] .sr-only {
     text-align: center;
   }
 
-  html[data-site-mode="figma3042"] .landing3042-studio-surface {
-    --landing-studio-close-right: var(--landing-exclusion-close-right);
-    --landing-studio-close-top: var(--landing-exclusion-close-top);
-    --landing-studio-close-size: var(--landing-exclusion-close-size);
-    --landing-studio-mobile-height-reference: 770px;
-    --landing-studio-mobile-height-delta: clamp(
-      -220px,
-      calc(100dvh - var(--landing-studio-mobile-height-reference)),
-      220px
-    );
-    --landing-studio-mobile-main-top-gap: clamp(
-      112px,
-      calc(170px + (var(--landing-studio-mobile-height-delta) * 0.44)),
-      222px
-    );
-    --landing-studio-mobile-main-gap: clamp(
-      10px,
-      calc(20px + (var(--landing-studio-mobile-height-delta) * 0.055)),
-      28px
-    );
-    --landing-studio-mobile-projects-gap: clamp(
-      10px,
-      calc(20px + (var(--landing-studio-mobile-height-delta) * 0.055)),
-      28px
-    );
-    --landing-studio-mobile-project-list-gap: clamp(
-      8px,
-      calc(14px + (var(--landing-studio-mobile-height-delta) * 0.04)),
-      20px
-    );
-    --landing-studio-mobile-project-row-gap: clamp(
-      2px,
-      calc(5px + (var(--landing-studio-mobile-height-delta) * 0.02)),
-      8px
-    );
-    --landing-studio-mobile-writing-gap: clamp(
-      0px,
-      calc(7px + (var(--landing-studio-mobile-height-delta) * 0.03)),
-      13px
-    );
-    --landing-studio-mobile-bottom-safe: clamp(
-      128px,
-      calc(138px + (var(--landing-studio-mobile-height-delta) * 0.08)),
-      156px
-    );
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100% !important;
-    height: 100% !important;
-    padding:
-      8.5984%
-      4.9866%
-      var(--landing-studio-mobile-bottom-safe) !important;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: var(--landing-studio-mobile-main-gap);
-    transform: none !important;
-    transform-origin: top center;
-    overflow: hidden !important;
-  }
-
-  /* Mobile studio title/subtitle/close are locked by the final state-specific
-     override at the end of the file so they can exactly mirror exclusion. */
-
-  html[data-site-mode="figma3042"] .landing3042-studio-main {
-    position: relative;
-    left: auto;
-    top: auto;
-    width: 100%;
-    margin-top: var(--landing-studio-mobile-main-top-gap);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--landing-studio-mobile-main-gap);
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-logo-block {
-    display: none;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-projects {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--landing-studio-mobile-projects-gap);
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-project-title {
-    font-size: clamp(24px, 6.8vw, 32px);
-    line-height: 1.02;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-project-list {
-    width: 100%;
-    gap: var(--landing-studio-mobile-project-list-gap);
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-project-row {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--landing-studio-mobile-project-row-gap);
-    justify-items: start;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-project-link,
-  html[data-site-mode="figma3042"] .landing3042-studio-project-more {
-    font-size: clamp(17px, 4.3vw, 20px);
-    line-height: 1.22;
-    text-align: left;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-project-more {
-    justify-self: start;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-writing {
-    position: relative;
-    left: auto;
-    top: auto;
-    margin-top: var(--landing-studio-mobile-writing-gap);
-    padding-top: 0;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-studio-writing-link {
-    font-size: clamp(20px, 5.8vw, 26px);
-    line-height: 1.08;
-  }
-
   html[data-site-mode="figma3042"] .landing3042-modal {
     place-items: end stretch;
     padding: 0;
@@ -9217,8 +8528,7 @@ html[data-site-mode="figma3042"] .sr-only {
     top: 10px;
   }
 
-  html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close,
-  html[data-site-mode="figma3042"] #homepage---left .landing3042-studio-close {
+  html[data-site-mode="figma3042"] #homepage---left .landing3042-exclusion-close{
     transform: none;
   }
 
@@ -9443,41 +8753,6 @@ html[data-site-mode="figma3042"] .sr-only {
   html[data-site-mode="figma3042"] .landing3042-namecard-wrap .namecard-flip {
     width: 100%;
     max-width: 100%;
-  }
-
-  html[data-site-mode="figma3042"] .landing3042-modal-dialog-studio .hero3042-title {
-    font-size: clamp(38px, 10vw, 52px);
-    line-height: 1.03;
-  }
-
-  html[data-site-mode="figma3042"] .gan3042-logo-carousel {
-    height: clamp(170px, 52vw, 280px);
-  }
-
-  html[data-site-mode="figma3042"] .gan3042-subtitle {
-    font-size: clamp(18px, 4.8vw, 24px);
-  }
-
-  html[data-site-mode="figma3042"] .gan3042-project-title,
-  html[data-site-mode="figma3042"] .gan3042-writing {
-    font-size: clamp(26px, 7vw, 36px);
-    line-height: 1.1;
-  }
-
-  html[data-site-mode="figma3042"] .gan3042-project-row {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 3px;
-    margin-bottom: 8px;
-  }
-
-  html[data-site-mode="figma3042"] .gan3042-project-link,
-  html[data-site-mode="figma3042"] .gan3042-project-more {
-    font-size: clamp(20px, 5.2vw, 28px);
-    line-height: 1.35;
-  }
-
-  html[data-site-mode="figma3042"] .gan3042-project-more {
-    justify-self: start;
   }
 
   html[data-site-mode="figma3042"] .project-inline-home-title.hero3042-title {
@@ -9751,11 +9026,6 @@ html:not([data-site-mode="figma3042"]) .page-content > bodycopy {
   max-width: calc(100vw - (var(--global-page-gutter) * 2)) !important;
   margin-left: auto !important;
   margin-right: auto !important;
-}
-
-/* Only Summer School project line: custom line-height */
-html[data-site-mode="figma3042"] .gan3042-project-link[data-copy-key="shared.home.left.projects.summerschool"] {
-  line-height: 1.2 !important;
 }
 
 /* ===== user hard overrides: typography + responsive squeeze + full-viewport landing ===== */
@@ -10047,49 +9317,6 @@ html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepa
 }
 
 html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepage---left .landing3042-exclusion-close {
-  display: flex;
-  pointer-events: auto;
-}
-
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-bubbles {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-logo {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-bubble-hi,
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-bubble-preferred,
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-bubble-uyghur,
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-bubble-legally,
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-bubble-studio {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  animation-play-state: paused;
-  pointer-events: none !important;
-}
-
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-inline {
-  display: block;
-  pointer-events: auto;
-}
-
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-header {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-close {
   display: flex;
   pointer-events: auto;
 }
@@ -11927,54 +11154,54 @@ html[data-site-mode="figma3042"] #map-center-hover-preview.map-center-hover-prev
   cursor: var(--cursor-current-url) 16 16, default !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active #homepage---left {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) #homepage---left {
   display: none !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active .home3042,
-html[data-site-mode="figma3042"].figma-capture-active .practice3042,
-html[data-site-mode="figma3042"].figma-capture-active .practice3042-canvas,
-html[data-site-mode="figma3042"].figma-capture-active .practice3042-grid-wrap,
-html[data-site-mode="figma3042"].figma-capture-active #homepage---right {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .home3042,
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .practice3042,
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .practice3042-canvas,
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .practice3042-grid-wrap,
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) #homepage---right {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active .practice3042 {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .practice3042 {
   padding: 0 !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active .practice3042-canvas,
-html[data-site-mode="figma3042"].figma-capture-active .practice3042-grid-wrap {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .practice3042-canvas,
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path) .practice3042-grid-wrap {
   position: static !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active.map-project-open #map-project-inline-shell {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path).map-project-open #map-project-inline-shell {
   position: relative !important;
   inset: auto !important;
   overflow: visible !important;
   background: #ffffff;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active.map-project-open #map-project-inline-scroll {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path).map-project-open #map-project-inline-scroll {
   height: auto !important;
   max-height: none !important;
   overflow: visible !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active.map-project-open .map-project-inline-content,
-html[data-site-mode="figma3042"].figma-capture-active.map-project-open .map-project-detail-page {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path).map-project-open .map-project-inline-content,
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path).map-project-open .map-project-detail-page {
   min-height: 0 !important;
   height: auto !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active.map-project-open .map-project-detail-topbar {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path).map-project-open .map-project-detail-topbar {
   position: relative !important;
   top: auto !important;
 }
 
-html[data-site-mode="figma3042"].figma-capture-active.map-project-open #map-project-inline-nav {
+html[data-site-mode="figma3042"].figma-capture-active:not(.figma-capture-path).map-project-open #map-project-inline-nav {
   display: none !important;
 }
 
@@ -12665,7 +11892,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   outline-offset: 2px;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -12673,7 +11900,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   overflow: hidden;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-slide {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-slide {
   position: absolute;
   inset: 0;
   display: block;
@@ -12687,18 +11914,18 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   transition: opacity 240ms ease;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-slide--video {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-slide--video {
   object-fit: cover;
   object-position: center;
   background: transparent;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-slide.is-active {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-slide.is-active {
   opacity: 1;
   pointer-events: auto;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-pagination {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-pagination {
   --section-c-conclusion-pagination-h: 8px;
   margin-top: 0;
   display: flex;
@@ -12709,7 +11936,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   pointer-events: none;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-footer {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-footer {
   margin-top: 12px;
   display: flex;
   align-items: center;
@@ -12717,7 +11944,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   gap: 12px;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-pagination-item {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-pagination-item {
   --map-center-hover-preview-slide-progress: 0;
   position: relative;
   width: 8px;
@@ -12734,7 +11961,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
     background-color 180ms ease;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-pagination-item::after {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-pagination-item::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -12744,20 +11971,20 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   transform-origin: left center;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-pagination-item.is-active {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-pagination-item.is-active {
   width: 28px;
   border-color: rgba(245, 245, 245, 0.94);
   opacity: 1;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav {
   display: inline-flex;
   align-items: center;
   gap: 32px;
   flex: 0 0 auto;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn {
   position: relative;
   width: 24px;
   height: 24px;
@@ -12768,7 +11995,7 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   cursor: pointer;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn::before {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -12780,23 +12007,23 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   transform-origin: center;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn--prev::before {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn--prev::before {
   transform: translate(-50%, -50%) rotate(225deg);
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn--next::before {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn--next::before {
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn:hover {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn:hover {
   color: #f5f5f5;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn:focus {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn:focus {
   outline: none;
 }
 
-html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c .map-project-detail-section-c-conclusion-carousel-nav-btn:focus-visible {
+:is(html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--veritas #map-project-detail-section-c, html[data-site-mode="figma3042"] #map-project-norrtag-root) .map-project-detail-section-c-conclusion-carousel-nav-btn:focus-visible {
   outline: 1px solid rgba(245, 245, 245, 0.68);
   outline-offset: 3px;
 }
@@ -13496,97 +12723,6 @@ html[data-site-mode="figma3042"] #map-project-inline-shell.map-project-shell--ve
   }
 }
 
-@media (max-width: 767.98px) {
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-header {
-    position: absolute !important;
-    left: 4.9866% !important;
-    top: 2% !important;
-    width: 72.4901% !important;
-    max-width: 72.4901% !important;
-    margin: 0 !important;
-    display: block !important;
-    gap: 0 !important;
-    z-index: 8 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-inline-title.landing3042-studio-title {
-    margin: 0 !important;
-    color: rgba(0, 0, 0, 0.75) !important;
-    font-size: var(--text-l1-size) !important;
-    line-height: var(--text-l1-line) !important;
-    font-weight: 400 !important;
-    letter-spacing: 0 !important;
-    white-space: normal !important;
-    font-family: "Atkinson Hyperlegible" !important;
-    font-synthesis: none !important;
-    font-variation-settings: "wght" 400 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left .landing3042-studio-subtitle {
-    margin: clamp(8px, 2.2vw, 12px) 0 0 !important;
-    color: #1b1b1b !important;
-    font-size: clamp(19px, 5.65vw, 29px) !important;
-    line-height: 1.2 !important;
-    font-weight: 400 !important;
-    letter-spacing: 0 !important;
-    white-space: normal !important;
-    max-width: none !important;
-    font-family: "Atkinson Hyperlegible" !important;
-    font-synthesis: none !important;
-    font-variation-settings: "wght" 400 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close {
-    position: absolute !important;
-    left: auto !important;
-    right: var(--landing-exclusion-close-right) !important;
-    top: var(--landing-exclusion-close-top) !important;
-    width: var(--landing-exclusion-close-size) !important;
-    height: var(--landing-exclusion-close-size) !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    appearance: none !important;
-    transform: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 9 !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close .map-project-inline-close-icon {
-    display: none !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close::before,
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close::after {
-    content: "" !important;
-    position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
-    width: calc(var(--landing-exclusion-close-size) * 0.58) !important;
-    height: 1.5px !important;
-    background: #1b1b1b !important;
-    border-radius: 999px !important;
-    transform-origin: center !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close::before {
-    transform: translate(-50%, -50%) rotate(45deg) !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close::after {
-    transform: translate(-50%, -50%) rotate(-45deg) !important;
-  }
-
-  html[data-site-mode="figma3042"][data-landing-surface-state="studio"] #homepage---left #landing3042-studio-close.landing3042-studio-close:focus-visible {
-    outline: 2px solid rgba(0, 0, 0, 0.45) !important;
-    outline-offset: 4px !important;
-  }
-}
-
 /* Exclusion name entry — Figma 4166:1353; scoped to the existing inline view. */
 html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepage---left .landing3042-header {
   top: 1.4697% !important;
@@ -13731,4 +12867,138 @@ html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepa
 
 html[data-site-mode="figma3042"][data-landing-surface-state="exclusion"] #homepage---left .landing3042-inline-link[data-trigger="exclusion"]::before {
   content: none;
+}
+
+/* Motion polish: only transitions between the existing visual states. Keep
+   scroll-linked title geometry and pointer-driven media transforms immediate. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-site-mode="figma3042"] #homepage---right .mypractice-map-block {
+    transition: opacity 140ms cubic-bezier(.2,.8,.2,1),
+      background-color 160ms cubic-bezier(.2,.8,.2,1),
+      box-shadow 140ms cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-site-mode="figma3042"] .map-project-detail-topbar,
+  html[data-site-mode="figma3042"] .map-project-inline-nav {
+    transition: background-color 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-site-mode="figma3042"] #map-project-inline-shell h2#map-project-detail-title,
+  html[data-site-mode="figma3042"] .map-project-inline-nav-label {
+    transition: color 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-site-mode="figma3042"] .map-project-inline-close-icon,
+  html[data-site-mode="figma3042"] .map-project-inline-nav-icon,
+  html[data-site-mode="figma3042"] .map-project-detail-separator img {
+    transition: filter 180ms cubic-bezier(.2,.8,.2,1), opacity 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-site-mode="figma3042"] .map-project-inline-close,
+  html[data-site-mode="figma3042"] .map-project-inline-nav-btn {
+    transition: opacity 120ms cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-site-mode="figma3042"] .map-project-detail-section-c-conclusion-carousel-slide {
+    transition-timing-function: cubic-bezier(.2,.8,.2,1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-site-mode="figma3042"] #homepage---right .mypractice-map-block,
+  html[data-site-mode="figma3042"] #homepage---right .mypractice-map-top-tag-asset,
+  html[data-site-mode="figma3042"] .map-project-inline-content,
+  html[data-site-mode="figma3042"] .map-project-detail-topbar,
+  html[data-site-mode="figma3042"] #map-project-inline-shell h2#map-project-detail-title,
+  html[data-site-mode="figma3042"] .map-project-detail-separator img,
+  html[data-site-mode="figma3042"] .map-project-inline-close,
+  html[data-site-mode="figma3042"] .map-project-inline-close-icon,
+  html[data-site-mode="figma3042"] .map-project-inline-nav,
+  html[data-site-mode="figma3042"] .map-project-inline-nav-btn,
+  html[data-site-mode="figma3042"] .map-project-inline-nav-icon,
+  html[data-site-mode="figma3042"] .map-project-inline-nav-label,
+  html[data-site-mode="figma3042"] .map-project-detail-hotspot,
+  html[data-site-mode="figma3042"] .map-project-detail-hotspot-chip,
+  html[data-site-mode="figma3042"] .map-project-detail-section-c-conclusion-carousel-slide,
+  html[data-site-mode="figma3042"] .map-project-detail-section-c-conclusion-carousel-pagination-item,
+  html[data-site-mode="figma3042"] .map-project-opentrace-sequence-image,
+  html[data-site-mode="figma3042"] .map-project-opentrace-sequence-pagination-item {
+    transition: none !important;
+  }
+}
+
+/* New homepage links; existing bubble and collision rules stay intact. */
+html[data-site-mode="figma3042"] .landing3042-contact-links {
+  position: absolute;
+  top: 2%;
+  right: 2.9528%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24px;
+}
+html[data-site-mode="figma3042"] .landing3042-contact-links .landing3042-email-link {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+@media (min-width: 768px) {
+  html[data-site-mode="figma3042"] {
+    --landing-bubble-studio-w-nm: 458px;
+  }
+  html[data-site-mode="figma3042"] #homepage---left .landing3042-archive-link {
+    left: min(52.8965%, calc(100% - var(--landing-bubble-studio-w-nm) - 12px)) !important;
+  }
+}
+@media (min-width: 560px) and (max-width: 1099.98px) {
+  html[data-site-mode="figma3042"] .landing3042-contact-links {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  html[data-site-mode="figma3042"] .landing3042-contact-links .landing3042-email-link {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+}
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  html[data-site-mode="figma3042"][data-landing-surface-state="home"] #homepage---left .landing3042-title-copy {
+    font-size: 3.069444cqw !important;
+    margin-top: 12px !important;
+  }
+}
+@media (max-width: 767.98px) {
+  html[data-site-mode="figma3042"] #homepage---left .landing3042-archive-link {
+    left: 27.75% !important;
+    width: 65.89% !important;
+  }
+}
+@media (min-width: 560px) and (max-width: 767.98px) {
+  html[data-site-mode="figma3042"][data-landing-surface-state="home"] #homepage---left .hero3042-title {
+    font-size: 28px !important;
+  }
+  html[data-site-mode="figma3042"][data-landing-surface-state="home"] #homepage---left .landing3042-title-copy {
+    font-size: 3.069444vw !important;
+    margin-top: 8px !important;
+  }
+}
+@media (max-width: 559.98px) {
+  html[data-site-mode="figma3042"][data-landing-surface-state="home"] #homepage---left .landing3042-header {
+    width: calc(100% - 5.9056%) !important;
+  }
+  html[data-site-mode="figma3042"][data-landing-surface-state="home"] #homepage---left .hero3042-title {
+    font-size: clamp(24px, 7.179487vw, 32px) !important;
+  }
+  html[data-site-mode="figma3042"][data-landing-surface-state="home"] #homepage---left .landing3042-title-copy {
+    font-size: clamp(16px, 4.615385vw, 20px) !important;
+    margin-top: 8px !important;
+  }
+  html[data-site-mode="figma3042"] .landing3042-contact-links {
+    left: 2.9528%;
+    right: 2.9528%;
+    top: var(--landing-contact-top, 100px);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  html[data-site-mode="figma3042"] .landing3042-contact-links .landing3042-email-link {
+    text-align: left;
+    font-size: clamp(16px, 4.615385vw, 20px);
+    line-height: 1.2;
+  }
 }
