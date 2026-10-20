@@ -186,12 +186,16 @@
       var freshGesture = now - wheelTime > 180 || wheelDirection >= 0;
       if (event.deltaY > 0) {
         returnGuard = false;
-      } else if (freshGesture && scroll.scrollTop <= boundary + 1 && returnGuard) {
+      } else if (freshGesture && scroll.scrollTop <= boundary + 1) {
+        if (returnGuard) {
+          event.preventDefault();
+          moveTo(0);
+          return;
+        }
         event.preventDefault();
-        moveTo(0);
-        return;
+        returnGuard = true;
       } else if (freshGesture) {
-        returnGuard = scroll.scrollTop > boundary + 1;
+        returnGuard = true;
       }
       wheelTime = now;wheelDirection = Math.sign(event.deltaY);
       if (event.deltaY < 0 && returnGuard && scroll.scrollTop <= boundary + 1) {
@@ -213,7 +217,10 @@
           event.preventDefault();
           moveTo(0);
           returnGuard = false;
-        } else if (!touchStartAtBoundary) {
+        } else if (touchStartAtBoundary) {
+          event.preventDefault();
+          returnGuard = true;
+        } else {
           event.preventDefault();
         }
       }
