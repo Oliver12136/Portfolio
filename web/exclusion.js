@@ -56,7 +56,7 @@
     var segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, {granularity:'grapheme'}) : null;
     var marks = [], exits = new Map(), composing = false, open = false, previousInput = ''; 
     var lastTrigger = trigger, returnY = 0, inertElements = [], bodyStyle = null;
-    var wheelTime = 0, wheelDirection = 0, returnGuard = false, touchStartY = 0, touchStartAtBoundary = false;
+    var wheelTime = 0, wheelDirection = 0, returnGuard = false, returnTransition = false, touchStartY = 0;
     var viewportRaf = 0;
     function focus(node) { if (node) node.focus({preventScroll:true}); }
     function hashOpen() { return location.hash.toLowerCase() === '#exclusion'; }
@@ -145,7 +145,10 @@
       if (returnGuard && scroll.scrollTop < reflection.offsetTop) {
         scroll.scrollTop = reflection.offsetTop;
       }
-      if (scroll.scrollTop <= 1) readingRequested = false;
+      if (scroll.scrollTop <= 1) {
+        readingRequested = false;
+        returnTransition = false;
+      }
       syncInputState(false);
     }, {passive:true});
     desktop.addEventListener('change', function () { syncInputState(true); });
@@ -187,10 +190,9 @@
         returnGuard = false;
       } else if (scroll.scrollTop <= boundary + 1) {
         event.preventDefault();
-        if (!returnGuard) {
-          returnGuard = true;
+        if (!returnTransition) {
+          returnTransition = true;
           moveTo(0);
-          returnGuard = true;
         }
       }
       wheelTime = now;wheelDirection = Math.sign(event.deltaY);
@@ -201,26 +203,19 @@
     scroll.addEventListener('touchstart', function (event) {
       if (event.touches.length !== 1) return;
       touchStartY = event.touches[0].clientY;
-      touchStartAtBoundary = scroll.scrollTop <= reflection.offsetTop + 1;
-      if (!touchStartAtBoundary) returnGuard = true;
+      if (scroll.scrollTop > reflection.offsetTop + 1) returnGuard = true;
     }, {passive:true});
     scroll.addEventListener('touchmove', function (event) {
       if (event.touches.length !== 1) return;
       var movement = event.touches[0].clientY - touchStartY;
-      if (movement < 0 && !touchStartAtBoundary) returnGuard = true;
       if (movement > 0 && scroll.scrollTop <= reflection.offsetTop + 1) {
-        if (!returnGuard) {
-          event.preventDefault();
-          returnGuard = true;
+        event.preventDefault();
+        if (!returnTransition) {
+          returnTransition = true;
           moveTo(0);
-          returnGuard = true;
         }
       }
     }, {passive:false});
-    scroll.addEventListener('touchend', function () {
-      if (touchStartAtBoundary && scroll.scrollTop <= reflection.offsetTop + 1) returnGuard = true;
-      touchStartAtBoundary = false;
-    }, {passive:true});
     function openExclusion(source) {
       if(open)return;open=true;lastTrigger=source||document.activeElement||trigger;
       returnY=window.scrollY;
@@ -231,7 +226,7 @@
       inertElements=Array.from(document.body.children).filter(function(el){return el!==panel&&el.tagName!=='SCRIPT'&&el.tagName!=='LINK'&&!el.inert;});
       inertElements.forEach(function(el){el.inert=true;});
       if(bubbleMotionApi)bubbleMotionApi.pause(true);
-      viewport();returnGuard=false;scroll.scrollTop=0;wheelTime=0;
+      viewport();returnGuard=false;returnTransition=false;scroll.scrollTop=0;wheelTime=0;
       acceptingInput=false;readingRequested=false;
       if(!hashOpen()) location.hash='exclusion';
       focus(scroll);
