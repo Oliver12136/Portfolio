@@ -1116,3 +1116,10 @@ html[data-site-mode="figma3042"] .norrtag-detail .norrtag-hotspot--blue .map-pro
 .map-project-detail-hotspot-inline-preview[data-norrtag-preview][data-image-loading-state="loading"] {
   aspect-ratio: var(--norrtag-preview-ratio);
 }
+
+/* Keep research copy full-width below 1060px; hide the route and its host. */
+@media (max-width: 1059.98px) {
+  .norrtag-research-intro { grid-template-columns: minmax(0, 1fr); }
+  .norrtag-research-intro .norrtag-route-host,
+  .norrtag-research-intro .norrtag-route { display: none; }
+}
