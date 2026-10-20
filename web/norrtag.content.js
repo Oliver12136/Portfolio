@@ -224,10 +224,11 @@ window.NorrtagComposition = {
   title: "EVERYONE'S ON BOARD",
   tags: ["#Service & Interaction", "#Inclusive Mobility", "#Participatory"],
   metadata: [
-    "Designed by Oğuzhan, Aditi, Mark, Alma",
     "In collaboration with Norrtåg",
     "With support from Biofuel Region",
   ],
+  collaboratorsHtml:
+    'Designed by Oğuzhan, <a class="external-link-hoverfx" href="https://www.aditisingh.design/" target="_blank" rel="noopener noreferrer" data-external-preview-title="Aditi Singh">Aditi</a>, <a class="external-link-hoverfx" href="https://www.markvedberg.com/agency-in-regional-train-travel" target="_blank" rel="noopener noreferrer" data-external-preview-title="Mark Vedberg" data-external-preview-icon="https://framerusercontent.com/images/2pDkPJXZ3gGpDWMq02RFBc49Mzo.png" data-external-preview-transparent="true">Mark</a>, <a class="external-link-hoverfx" href="https://www.almabulow.com/" target="_blank" rel="noopener noreferrer" data-external-preview-title="Alma Bulow">Alma</a>',
   introduction:
     "Everyone's On Board is a service design concept that reimagines Norrtåg as a more inclusive and socially supportive travel experience. By focusing on the diverse needs, challenges, and everyday realities of passengers, the proposal introduces a series of interconnected touchpoints that foster a sense of belonging, participation, and shared responsibility onboard. Spanning both practical support and more social, engaging interventions, the concept empowers travellers to take an active role in shaping their journey while strengthening connections between passengers, staff, and the wider travel environment.",
   researchHeading: "Meet People at Where They Are!",

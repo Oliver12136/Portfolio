@@ -180,7 +180,14 @@
       tags = node("div"),
       credits = node("div");
     paragraphs(tags, design.tags);
-    paragraphs(credits, design.metadata);
+    if (design.collaboratorsHtml) {
+      var collaboratorCredit = node("p");
+      collaboratorCredit.innerHTML = design.collaboratorsHtml;
+      credits.appendChild(collaboratorCredit);
+      paragraphs(credits, design.metadata);
+    } else {
+      paragraphs(credits, design.metadata);
+    }
     meta.append(tags, credits);
     opening.appendChild(meta);
     var hero = node("div", "norrtag-hero");

@@ -5624,6 +5624,16 @@
         '<p class="map-project-opentrace-lead">' + escapeMapProjectDetailHtml(lead) + "</p>",
         "</div>",
         "</div>",
+        '<section class="practice3042-open-traces-official" aria-label="Official NEXT GEN DESIGN feature">',
+        '<div class="practice3042-open-traces-official-heading">',
+        '<p class="practice3042-open-traces-official-kicker">Featured in NEXT GEN DESIGN 2026</p>',
+        '<a class="practice3042-open-traces-official-link" href="https://nextgendesign.eu/2026/04/20/opentraces/" target="_blank" rel="noopener noreferrer">View Official Feature</a>',
+        "</div>",
+        '<div class="practice3042-open-traces-official-frame">',
+        '<iframe src="https://nextgendesign.eu/2026/04/20/opentraces/" title="OpenTraces featured on NEXT GEN DESIGN" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>',
+        "</div>",
+        '<p class="practice3042-open-traces-official-source">Official source: <a href="https://nextgendesign.eu/2026/04/20/opentraces/" target="_blank" rel="noopener noreferrer">NEXT GEN DESIGN</a></p>',
+        "</section>",
         /* Temporarily hide all content below the introductory video and copy.
            Keep the sequence and closing components here for later restoration.
         '<section class="map-project-opentrace-sequence-block">',
